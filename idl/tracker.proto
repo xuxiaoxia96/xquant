@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package tracker;
+
+//import "api.proto";
+
+option go_package = "/tracker";
+
+message TrackerRequest {
+  repeated uint64 trackerStrategyCodes = 1;
+}

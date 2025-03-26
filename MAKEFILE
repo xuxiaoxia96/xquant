@@ -1,0 +1,31 @@
+GOPATH ?= $(shell go env GOPATH)
+BIN_DIR := $(GOPATH)/bin
+HERTZ_VERSION := v0.8.0
+HERTZ := $(BIN_DIR)/hz-$(HERTZ_VERSION)
+THRIFTFMT_VERSION := v0.0.8
+THRIFTFMT := $(BIN_DIR)/thriftfmt-$(THRIFTFMT_VERSION)
+THRIFTGO_VERSION := v0.3.4
+THRIFTGO := $(BIN_DIR)/thriftgo-$(THRIFTGO_VERSION)
+GOLANGCI_LINT_VERSION := v1.53.3
+GOLANGCI_LINT := $(BIN_DIR)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+GOMOCK_VERSION := v1.5.0
+GOMOCK := $(BIN_DIR)/mockgen-$(GOMOCK_VERSION)
+
+
+init_grpc:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+gen_grpc: init_grpc
+	protoc --proto_path=idl \
+		   --go_out=biz/model/ \
+		   --go_opt=paths=source_relative \
+		   --go-grpc_out=biz/model/ \
+		   --go-grpc_opt=paths=source_relative \
+		   idl/*
+
+update_backtest_proto:
+	hz update -I idl/backtest.proto -idl idl/backtest.proto
+
+update_tracker_proto:
+	hz update -I idl/tracker.proto -idl idl/tracker.proto

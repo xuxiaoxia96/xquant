@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package backtest;
+
+//import "api.proto";
+
+option go_package = "/backtest";
+
+message BacktestRequest {
+  int64 days = 1; // 统计天数
+  int64 topN = 2; // 输出前排名数
+  uint64 strategyCode = 3; // 策略ID
+  string securityCode = 4; // 证券代码
+  string date = 5; // 日期
+}
+
+
+message SingleSecurityCodeBacktestRequest {
+  uint64 strategyCode = 1; // 策略ID
+  string securityCode = 2; // 证券代码
+  string date = 3; // 日期
+}
+
+
+message StrategyBacktestRequest {
+  int64 days = 1; // 统计天数
+  int64 topN = 2; // 输出前排名数
+  uint64 strategyCode = 3; // 策略ID
+}
