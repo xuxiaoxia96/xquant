@@ -2,12 +2,11 @@ package tracker
 
 import (
 	"context"
-	"gitee.com/quant1x/gox/api"
 	"sort"
 	"time"
-	"xquant/pkg/factors"
 
 	"gitee.com/quant1x/exchange"
+	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/runtime"
 	"github.com/cloudwego/hertz/pkg/app"
 
@@ -15,12 +14,12 @@ import (
 	"xquant/biz/model/tracker"
 	"xquant/biz/models"
 	"xquant/pkg/config"
+	"xquant/pkg/factors"
 	"xquant/pkg/log"
 	"xquant/pkg/openapi_error"
 )
 
 // Tracker 实时跟踪策略在当前市场的表现，输出表格
-// TODO: 高频吗？CTA策略？搞清楚
 func Tracker(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req tracker.TrackerRequest

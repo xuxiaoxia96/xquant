@@ -1,6 +1,7 @@
 package strategy
 
 import (
+	"gitee.com/quant1x/gox/concurrent"
 	"quantity/common"
 	"time"
 )
@@ -8,6 +9,31 @@ import (
 // AvgPriceDownStrategy   代表7日均线向下穿过25日均线和99日均线
 type AvgPriceDownStrategy struct {
 	name string
+}
+
+func (down *AvgPriceDownStrategy) Code() ModelKind {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (down *AvgPriceDownStrategy) OrderFlag() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (down *AvgPriceDownStrategy) Filter(ruleParameter config.RuleParameter, snapshot factors.QuoteSnapshot) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (down *AvgPriceDownStrategy) Sort(snapshots []factors.QuoteSnapshot) SortedStatus {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (down *AvgPriceDownStrategy) Evaluate(securityCode string, result *concurrent.TreeMap[string, ResultInfo]) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (down *AvgPriceDownStrategy) Name() string {
