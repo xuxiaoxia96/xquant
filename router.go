@@ -5,11 +5,14 @@ package main
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	handler "xquant/biz/handler"
+	"xquant/biz/handler/tracker"
 )
 
 // customizeRegister registers customize routers.
 func customizedRegister(r *server.Hertz) {
 	r.GET("/ping", handler.Ping)
+
+	r.POST("/tracker", tracker.Tracker)
 
 	// your code ...
 }

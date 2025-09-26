@@ -84,29 +84,29 @@ func processStrategy(ctx context.Context, strategyCode uint64, isDebug bool) {
 	// 获取策略对象
 	strategy, err := models.CheckoutStrategy(strategyCode)
 	if err != nil {
-		log.CtxErrorf(ctx, "[Tracker] 获取策略 %s 失败: %s", strategyCode, err)
+		log.CtxErrorf(ctx, "[Tracker] 获取策略 %d 失败: %s", strategyCode, err)
 		return
 	}
 	if strategy == nil {
-		log.CtxWarnf(ctx, "[Tracker] 策略 %s 不存在", strategyCode)
+		log.CtxWarnf(ctx, "[Tracker] 策略 %d 不存在", strategyCode)
 		return
 	}
 
 	// 获取策略参数
 	strategyParam := config.GetStrategyParameterByCode(strategyCode)
 	if strategyParam == nil {
-		log.CtxWarnf(ctx, "[Tracker] 策略 %s 无参数配置", strategyCode)
+		log.CtxWarnf(ctx, "[Tracker] 策略 %d 无参数配置", strategyCode)
 		return
 	}
 
 	// 检查是否在交易时段或调试模式
 	if strategyParam.Session.IsTrading() || isDebug {
-		SnapshotTracker(strategy, strategyParam)
+		snapshotTracker(strategy, strategyParam)
 	}
 }
 
 // SnapshotTracker 策略配置 quant-engine/engine/config/resources/quant1x.yaml
-func SnapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter) {
+func snapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter) {
 	if tradeRule == nil {
 		return
 	}
@@ -130,7 +130,7 @@ func SnapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter)
 	sortedSnapshots := sortStocks(model, filteredSnapshots)
 
 	// 输出结果
-	tracker.OutputTable(model, sortedSnapshots)
+	tracker.HandleTrackerResult(model, sortedSnapshots)
 }
 
 // 获取有效的股票代码列表
@@ -156,7 +156,7 @@ func getStockSnapshots(stockCodes []string) []factors.QuoteSnapshot {
 	snapshots := make([]factors.QuoteSnapshot, 0, len(stockCodes))
 
 	for _, code := range stockCodes {
-		v := models.GetTickFromMemory(code)
+		v := models.SnapshotMgr.GetTickFromMemory(code)
 		if v != nil {
 			snapshot := models.QuoteSnapshotFromProtocol(*v)
 			snapshots = append(snapshots, snapshot)

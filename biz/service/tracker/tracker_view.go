@@ -10,8 +10,8 @@ import (
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pkg/tablewriter"
 
-	"xquant/biz/models"
 	"xquant/pkg/factors"
+	"xquant/pkg/models"
 	"xquant/pkg/storages"
 )
 

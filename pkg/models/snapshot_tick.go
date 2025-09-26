@@ -40,11 +40,6 @@ func NewSnapshotManager() *SnapshotManager {
 	}
 }
 
-var (
-	__mutexTicks sync.RWMutex
-	__cacheTicks = map[string]quotes.Snapshot{}
-)
-
 // GetTickFromMemory 从缓存获取快照
 func (sm *SnapshotManager) GetTickFromMemory(securityCode string) *quotes.Snapshot {
 	sm.mu.RLock()
@@ -59,7 +54,7 @@ func (sm *SnapshotManager) GetTickFromMemory(securityCode string) *quotes.Snapsh
 // GetStrategySnapshot 获取增强的策略快照
 func (sm *SnapshotManager) GetStrategySnapshot(securityCode string) *factors.QuoteSnapshot {
 	baseSnapshot := sm.GetTickFromMemory(securityCode)
-	if baseSnapshot == nil || baseSnapshot.State != quotes.TDX_SECURITY_TRADE_STATE_NORMAL {
+	if baseSnapshot == nil || baseSnapshot.State != quotes.SECURITY_TRADE_STATE_NORMAL {
 		return nil
 	}
 
@@ -105,7 +100,7 @@ func (sm *SnapshotManager) enrichHistoricalData(snapshot *factors.QuoteSnapshot,
 }
 
 // SyncAllSnapshots 实时更新快照
-func SyncAllSnapshots(ctx context.Context, barIndex *int) {
+func (sm *SnapshotManager) SyncAllSnapshots(ctx context.Context, barIndex *int) {
 	modName := "同步快照数据"
 	allCodes := securities.AllCodeList()
 	count := len(allCodes)
@@ -183,11 +178,11 @@ func SyncAllSnapshots(ctx context.Context, barIndex *int) {
 		bar.Wait()
 	}
 
-	__mutexTicks.Lock()
+	sm.mu.Lock()
 	for _, v := range snapshots {
-		__cacheTicks[v.SecurityCode] = v
+		sm.cache[v.SecurityCode] = v
 	}
-	__mutexTicks.Unlock()
+	sm.mu.Unlock()
 
 	if barIndex != nil {
 		*barIndex++
