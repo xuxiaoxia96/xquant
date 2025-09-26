@@ -3,14 +3,14 @@ package models
 import (
 	"errors"
 	"fmt"
-	"xquant/pkg/cache"
-	"xquant/pkg/config"
-	"xquant/pkg/factors"
+	"slices"
+	"sync"
 
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/concurrent"
-	"slices"
-	"sync"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
+	"xquant/pkg/factors"
 )
 
 // ModelKind 模型类型编码, 整型

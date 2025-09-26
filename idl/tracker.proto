@@ -8,4 +8,5 @@ option go_package = "/tracker";
 
 message TrackerRequest {
   repeated uint64 trackerStrategyCodes = 1;
+  bool is_debug = 2;
 }

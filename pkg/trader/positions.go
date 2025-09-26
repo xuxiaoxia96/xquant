@@ -71,7 +71,7 @@ func (p *Position) MergeFromOrder(order OrderDetail) bool {
 		return false
 	}
 	// 2. 获取快照
-	snapshot := models.GetStrategySnapshot(p.SecurityCode)
+	snapshot := models.SnapshotMgr.GetStrategySnapshot(p.SecurityCode)
 	plus := order.OrderType == STOCK_BUY
 	// 3. 缓存持仓和订单成本
 	// 3.1 计算当前持仓的买入成本

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"xquant/pkg/models"
 )
 
 var rootCmd = &cobra.Command{
@@ -10,6 +11,10 @@ var rootCmd = &cobra.Command{
 	Run:   serverBootstrap,
 }
 
+var (
+	SnapshotManager *models.SnapshotManager
+)
+
 func serverBootstrap(cmd *cobra.Command, args []string) {
 	//metrics.Init()
 
@@ -17,5 +22,8 @@ func serverBootstrap(cmd *cobra.Command, args []string) {
 		runGrpc()
 	}()
 
+	SnapshotManager = models.NewSnapshotManager()
+
 	runHTTP()
+
 }

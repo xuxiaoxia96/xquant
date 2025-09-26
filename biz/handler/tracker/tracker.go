@@ -3,79 +3,105 @@ package tracker
 import (
 	"context"
 	"sort"
+	"sync"
 	"time"
 
 	"gitee.com/quant1x/exchange"
-	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/runtime"
 	"github.com/cloudwego/hertz/pkg/app"
+	"golang.org/x/exp/slices"
 
 	"xquant/biz/handler"
-	"xquant/biz/model/tracker"
-	"xquant/biz/models"
+	trackermodel "xquant/biz/model/tracker"
 	"xquant/pkg/config"
 	"xquant/pkg/factors"
 	"xquant/pkg/log"
+	"xquant/pkg/models"
 	"xquant/pkg/openapi_error"
+	"xquant/pkg/tracker"
 )
 
 // Tracker 实时跟踪策略在当前市场的表现，输出表格
 func Tracker(ctx context.Context, c *app.RequestContext) {
-	var err error
-	var req tracker.TrackerRequest
-	err = c.BindAndValidate(&req)
-	if err != nil {
-		log.CtxErrorf(ctx, "[Tracker] error: %s", err)
+	// 解析并验证请求参数
+	var req trackermodel.TrackerRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		log.CtxErrorf(ctx, "[Tracker] 参数绑定失败: %s", err)
 		handler.OpenAPIFail(ctx, c, openapi_error.NewInvalidParameterError(ctx, "", err.Error()))
 		return
 	}
 
 	trackerStrategyCodes := req.GetTrackerStrategyCodes()
+	if len(trackerStrategyCodes) == 0 {
+		log.CtxWarnf(ctx, "[Tracker] 未指定跟踪的策略代码")
+		return // 无跟踪目标，直接返回
+	}
+
+	// 使用带退出条件的循环，避免无法终止的无限循环
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop() // 确保资源释放
+
 	for {
-		// 前置判断
-		// 能否实时更新, 收盘时间前停止更新
-		updateInRealTime, status := exchange.CanUpdateInRealtime()
-		isTrading := updateInRealTime && (status == exchange.ExchangeTrading || status == exchange.ExchangeSuspend)
-		// 休市中交易暂停
-		if !isTrading {
-			// 非调试且非交易时段返回
+		select {
+		case <-ctx.Done(): // 上下文取消时退出
+			log.CtxWarnf(ctx, "[Tracker] 收到退出信号，停止跟踪")
 			return
-		}
-		if status == exchange.ExchangeSuspend {
-			time.Sleep(time.Second * 1)
-			continue
-		}
+		case <-ticker.C: // 按固定间隔执行
+			// 检查是否可以实时更新
+			updateInRealTime, status := exchange.CanUpdateInRealtime()
 
-		// 进度条
-		// 收集信息到缓存，__cacheTicks
-		models.SyncAllSnapshots()
+			isTrading := updateInRealTime &&
+				(status == exchange.ExchangeTrading || status == exchange.ExchangeSuspend)
+			// 非交易时段且非调试模式，退出跟踪
+			if !isTrading && !req.IsDebug {
+				log.CtxInfof(ctx, "[Tracker] 非交易时段，停止跟踪")
+				return
+			}
 
-		// 策略列表
-		for _, trackerStrategyCode := range trackerStrategyCodes {
-			// 获取策略对象
-			strategy, err := models.CheckoutStrategy(trackerStrategyCode)
-			if err != nil || strategy == nil {
+			// 休市暂停状态，跳过本次循环
+			if status == exchange.ExchangeSuspend {
 				continue
 			}
 
-			// 获取策略参数
-			strategyParameter := config.GetStrategyParameterByCode(trackerStrategyCode)
-			if strategyParameter == nil {
-				continue
-			}
+			barIndex := 1
+			models.SnapshotMgr.SyncAllSnapshots(ctx, &barIndex)
 
-			if strategyParameter.Session.IsTrading() {
-				// 核心代码
-				SnapshotTracker(strategy, strategyParameter)
-			} else {
-				if runtime.Debug() {
-					SnapshotTracker(strategy, strategyParameter)
-				} else {
-					break
-				}
+			// 并行处理多个策略（提高效率，根据实际情况调整并行度）
+			var wg sync.WaitGroup
+			for _, strategyCode := range trackerStrategyCodes {
+				wg.Add(1)
+				go func(code uint64) {
+					defer wg.Done()
+					processStrategy(ctx, code, req.IsDebug)
+				}(strategyCode)
 			}
+			wg.Wait()
 		}
-		time.Sleep(time.Second * 1)
+	}
+}
+
+// processStrategy 处理单个策略的跟踪逻辑
+func processStrategy(ctx context.Context, strategyCode uint64, isDebug bool) {
+	// 获取策略对象
+	strategy, err := models.CheckoutStrategy(strategyCode)
+	if err != nil {
+		log.CtxErrorf(ctx, "[Tracker] 获取策略 %s 失败: %s", strategyCode, err)
+		return
+	}
+	if strategy == nil {
+		log.CtxWarnf(ctx, "[Tracker] 策略 %s 不存在", strategyCode)
+		return
+	}
+
+	// 获取策略参数
+	strategyParam := config.GetStrategyParameterByCode(strategyCode)
+	if strategyParam == nil {
+		log.CtxWarnf(ctx, "[Tracker] 策略 %s 无参数配置", strategyCode)
+		return
+	}
+
+	// 检查是否在交易时段或调试模式
+	if strategyParam.Session.IsTrading() || isDebug {
+		SnapshotTracker(strategy, strategyParam)
 	}
 }
 
@@ -85,51 +111,78 @@ func SnapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter)
 		return
 	}
 
-	// 获取股票代码列表（策略作用于的股票）
-	stockCodes := tradeRule.StockList()
+	// 获取并验证股票代码
+	stockCodes := getValidStockCodes(tradeRule)
 	if len(stockCodes) == 0 {
 		return
 	}
 
-	// 即时行情快照(副本)
-	var stockSnapshots []factors.QuoteSnapshot
-	stockCount := len(stockCodes)
-	//bar := progressbar.NewBar(*barIndex, "执行["+model.Name()+"全市场扫描]", stockCount)
-	for start := 0; start < stockCount; start++ {
-		//bar.Add(1)
-		code := stockCodes[start]
-		securityCode := exchange.CorrectSecurityCode(code)
-
-		if exchange.AssertIndexBySecurityCode(securityCode) {
-			continue
-		}
-
-		v := models.GetTickFromMemory(securityCode)
-		if v != nil {
-			// 转换
-			snapshot := models.QuoteSnapshotFromProtocol(*v)
-			// 加入即使行情
-			stockSnapshots = append(stockSnapshots, snapshot)
-		}
-	}
-
+	// 获取股票快照
+	stockSnapshots := getStockSnapshots(stockCodes)
 	if len(stockSnapshots) == 0 {
 		return
 	}
 
-	// 过滤不符合条件的个股
-	stockSnapshots = api.Filter(stockSnapshots, func(snapshot factors.QuoteSnapshot) bool {
-		err := model.Filter(tradeRule.Rules, snapshot)
-		return err == nil
-	})
+	// 过滤股票
+	filteredSnapshots := filterStocks(model, tradeRule, stockSnapshots)
 
-	// 结果集排序
-	sortedStatus := model.Sort(stockSnapshots)
+	// 排序股票
+	sortedSnapshots := sortStocks(model, filteredSnapshots)
+
+	// 输出结果
+	tracker.OutputTable(model, sortedSnapshots)
+}
+
+// 获取有效的股票代码列表
+func getValidStockCodes(tradeRule *config.StrategyParameter) []string {
+	stockCodes := tradeRule.StockList()
+	if len(stockCodes) == 0 {
+		return nil
+	}
+
+	validCodes := make([]string, 0, len(stockCodes))
+	for _, code := range stockCodes {
+		securityCode := exchange.CorrectSecurityCode(code)
+		if !exchange.AssertIndexBySecurityCode(securityCode) {
+			validCodes = append(validCodes, securityCode)
+		}
+	}
+
+	return validCodes
+}
+
+// 获取股票快照数据
+func getStockSnapshots(stockCodes []string) []factors.QuoteSnapshot {
+	snapshots := make([]factors.QuoteSnapshot, 0, len(stockCodes))
+
+	for _, code := range stockCodes {
+		v := models.GetTickFromMemory(code)
+		if v != nil {
+			snapshot := models.QuoteSnapshotFromProtocol(*v)
+			snapshots = append(snapshots, snapshot)
+		}
+	}
+
+	return snapshots
+}
+
+// 过滤不符合条件的股票
+func filterStocks(model models.Strategy, tradeRule *config.StrategyParameter, snapshots []factors.QuoteSnapshot) []factors.QuoteSnapshot {
+	return slices.DeleteFunc(snapshots, func(snapshot factors.QuoteSnapshot) bool {
+		err := model.Filter(tradeRule.Rules, snapshot)
+		return err != nil // 条件为true时会被删除
+	})
+}
+
+// 对股票进行排序
+func sortStocks(model models.Strategy, snapshots []factors.QuoteSnapshot) []factors.QuoteSnapshot {
+	sortedStatus := model.Sort(snapshots)
+
 	if sortedStatus == models.SortDefault || sortedStatus == models.SortNotExecuted {
-		// 默认排序或者排序未执行, 使用默认排序
-		sort.Slice(stockSnapshots, func(i, j int) bool {
-			a := stockSnapshots[i]
-			b := stockSnapshots[j]
+		// 使用默认排序
+		sort.Slice(snapshots, func(i, j int) bool {
+			a := snapshots[i]
+			b := snapshots[j]
 			if a.OpenTurnZ > b.OpenTurnZ {
 				return true
 			}
@@ -137,6 +190,5 @@ func SnapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter)
 		})
 	}
 
-	// 输出表格，利用该策略对行情的结果
-	//OutputTable(model, stockSnapshots)
+	return snapshots
 }
