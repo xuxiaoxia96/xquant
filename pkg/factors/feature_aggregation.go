@@ -1,9 +1,9 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/gox/logger"
 	"sync"
+	"xquant/pkg/cache"
 )
 
 var (

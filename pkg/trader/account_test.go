@@ -2,8 +2,8 @@ package trader
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/config"
 	"testing"
+	"xquant/pkg/config"
 )
 
 func TestCalculateAvailableFund(t *testing.T) {

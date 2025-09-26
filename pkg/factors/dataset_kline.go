@@ -2,9 +2,9 @@ package factors
 
 import (
 	"context"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/datasource/base"
 	"gitee.com/quant1x/gotdx/quotes"
+	"xquant/pkg/cache"
+	"xquant/pkg/datasource/base"
 )
 
 type DataKLine struct {

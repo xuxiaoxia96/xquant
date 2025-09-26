@@ -1,10 +1,10 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/config"
 	"gitee.com/quant1x/gotdx/quotes"
 	"gitee.com/quant1x/gox/logger"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
 )
 
 const (

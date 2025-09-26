@@ -2,9 +2,9 @@ package trader
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/config"
 	"gitee.com/quant1x/num"
 	"math"
+	"xquant/pkg/config"
 )
 
 const (

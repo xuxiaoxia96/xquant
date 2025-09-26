@@ -2,9 +2,9 @@ package factors
 
 import (
 	"context"
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
+	"xquant/pkg/cache"
 )
 
 const (

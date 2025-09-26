@@ -3,15 +3,15 @@ package trader
 import (
 	"encoding/json"
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/config"
-	"gitee.com/quant1x/engine/models"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/http"
 	"gitee.com/quant1x/gox/logger"
 	urlpkg "net/url"
 	"path/filepath"
 	"strings"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
+	"xquant/pkg/models"
 )
 
 var (

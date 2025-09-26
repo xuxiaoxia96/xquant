@@ -2,9 +2,9 @@ package factors
 
 import (
 	"context"
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/ta-lib/indicators"
+	"xquant/pkg/cache"
 )
 
 const (

@@ -2,13 +2,13 @@ package factors
 
 import (
 	"context"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/datasource/dfcf"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/quotes"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
+	"xquant/pkg/cache"
+	"xquant/pkg/datasource/dfcf"
 )
 
 // DataPreviewReport 业绩预告(Listed Companies'Performance Forecast)

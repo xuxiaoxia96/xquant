@@ -1,8 +1,8 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/datasource/base"
 	"gitee.com/quant1x/exchange"
+	"xquant/pkg/datasource/base"
 )
 
 // AdjustmentExecutor 复权执行接口

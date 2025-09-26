@@ -2,16 +2,16 @@ package factors
 
 import (
 	"context"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/config"
-	"gitee.com/quant1x/engine/datasource/dfcf"
-	"gitee.com/quant1x/engine/datasource/tdxweb"
-	"gitee.com/quant1x/engine/market"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/num"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
+	"xquant/pkg/datasource/dfcf"
+	"xquant/pkg/datasource/tdxweb"
+	"xquant/pkg/market"
 )
 
 const (

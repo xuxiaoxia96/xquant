@@ -2,15 +2,15 @@ package storages
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/models"
-	"gitee.com/quant1x/engine/trader"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"path"
 	"path/filepath"
 	"strings"
+	"xquant/pkg/cache"
+	"xquant/pkg/models"
+	"xquant/pkg/trader"
 )
 
 const (

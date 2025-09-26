@@ -2,8 +2,8 @@ package factors
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/datasource/base"
 	"testing"
+	"xquant/pkg/datasource/base"
 )
 
 func TestTransactionOld(t *testing.T) {

@@ -2,9 +2,9 @@ package trader
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/models"
-	"gitee.com/quant1x/engine/strategies"
 	"testing"
+	"xquant/pkg/models"
+	"xquant/pkg/strategies"
 )
 
 func TestQueryAccount(t *testing.T) {

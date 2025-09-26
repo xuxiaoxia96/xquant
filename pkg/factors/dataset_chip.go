@@ -1,14 +1,14 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/datasource/base"
-	"gitee.com/quant1x/engine/factors/pb"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/quotes"
 	"gitee.com/quant1x/pkg/yaml"
 	"google.golang.org/protobuf/proto"
 	"os"
+	"xquant/pkg/cache"
+	"xquant/pkg/datasource/base"
+	"xquant/pkg/factors/pb"
 )
 
 type DataChip struct {

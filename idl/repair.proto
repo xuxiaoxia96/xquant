@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package repair;
+
+//import "api.proto";
+
+option go_package = "/repair";
+
+enum DataType {
+  DATA_TYPE_ALL = 0;      // 全部数据
+  DATA_TYPE_BASE = 1;     // 基础数据（如原始行情、基本面数据等）
+  DATA_TYPE_FEATURE = 2;  // 特征数据（如衍生指标、计算特征等）
+}
+
+// 回补数据
+message RepairRequest {
+  DataType data_type = 1; // 数据类型， 全部数据，基础数据，特征数据
+  string start_date = 2; // 开始日期
+  string end_date = 3; // 结束日期
+}
+

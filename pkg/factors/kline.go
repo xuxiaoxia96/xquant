@@ -1,12 +1,12 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/datasource/base"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pandas"
+	"xquant/pkg/cache"
+	"xquant/pkg/datasource/base"
 )
 
 // BasicKLine 基础日K线

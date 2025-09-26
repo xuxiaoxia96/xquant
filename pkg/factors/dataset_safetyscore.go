@@ -1,6 +1,6 @@
 package factors
 
-import "gitee.com/quant1x/engine/cache"
+import "xquant/pkg/cache"
 
 // DataSafetyScore 个股基本面安全评分
 //

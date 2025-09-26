@@ -1,11 +1,11 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/datasource/dfcf"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/logger"
 	"sync"
+	"xquant/pkg/cache"
+	"xquant/pkg/datasource/dfcf"
 )
 
 var (

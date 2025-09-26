@@ -1,7 +1,7 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/datasource/dfcf"
+	"xquant/pkg/datasource/dfcf"
 )
 
 // ComputeFreeCapital 计算自由流通股本

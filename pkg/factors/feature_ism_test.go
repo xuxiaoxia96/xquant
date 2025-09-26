@@ -3,9 +3,9 @@ package factors
 import (
 	"encoding/json"
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/gox/api"
 	"testing"
+	"xquant/pkg/cache"
 )
 
 func TestISM(t *testing.T) {

@@ -1,11 +1,11 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/utils"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pandas"
 	. "gitee.com/quant1x/pandas/formula"
+	"xquant/pkg/utils"
 )
 
 // QuShiFanZhuan 趋势反转

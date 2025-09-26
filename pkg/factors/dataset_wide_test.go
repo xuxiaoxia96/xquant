@@ -2,8 +2,6 @@ package factors
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/utils"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
@@ -16,6 +14,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"xquant/pkg/cache"
+	"xquant/pkg/utils"
 )
 
 func TestKLine(t *testing.T) {

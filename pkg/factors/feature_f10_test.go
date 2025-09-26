@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/gox/api"
 	"testing"
+	"xquant/pkg/cache"
 )
 
 func TestF10(t *testing.T) {

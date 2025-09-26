@@ -2,11 +2,11 @@ package models
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/factors"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
 	"testing"
+	"xquant/pkg/cache"
+	"xquant/pkg/factors"
 )
 
 func TestFeatureToSnapshot(t *testing.T) {

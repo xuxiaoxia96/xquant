@@ -1,14 +1,14 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/config"
-	"gitee.com/quant1x/engine/utils"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pandas"
 	. "gitee.com/quant1x/pandas/formula"
 	"math"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
+	"xquant/pkg/utils"
 )
 
 // ShapeType K线形态类型

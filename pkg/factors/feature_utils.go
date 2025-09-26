@@ -1,9 +1,9 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/gotdx/securities"
 	"time"
+	"xquant/pkg/cache"
 )
 
 // GetTimestamp 时间戳

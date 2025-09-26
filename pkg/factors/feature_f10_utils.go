@@ -1,7 +1,6 @@
 package factors
 
 import (
-	"gitee.com/quant1x/engine/datasource/base"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx"
 	"gitee.com/quant1x/gotdx/quotes"
@@ -9,6 +8,7 @@ import (
 	"gitee.com/quant1x/num"
 	"strconv"
 	"time"
+	"xquant/pkg/datasource/base"
 )
 
 // 获取财务数据

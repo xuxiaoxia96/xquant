@@ -2,7 +2,6 @@ package trader
 
 import (
 	"fmt"
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
@@ -17,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"xquant/pkg/cache"
 )
 
 const (

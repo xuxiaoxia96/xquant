@@ -2,12 +2,12 @@ package factors
 
 import (
 	"context"
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/datasource/base"
-	"gitee.com/quant1x/engine/utils"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/pandas"
 	. "gitee.com/quant1x/pandas/formula"
+	"xquant/pkg/cache"
+	"xquant/pkg/datasource/base"
+	"xquant/pkg/utils"
 )
 
 type HousNo1 struct {
