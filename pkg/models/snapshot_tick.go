@@ -17,6 +17,7 @@ import (
 	"xquant/pkg/log"
 )
 
+// SnapshotMgr 快照管理
 var SnapshotMgr *SnapshotManager
 
 func init() {
@@ -108,6 +109,7 @@ func (sm *SnapshotManager) SyncAllSnapshots(ctx context.Context, barIndex *int) 
 	if barIndex != nil {
 		bar = progressbar.NewBar(*barIndex, "执行["+modName+"]", count)
 	}
+
 	currentDate := exchange.GetCurrentlyDay()
 	tdxApi := gotdx.GetTdxApi()
 	// 读取配置的并发数

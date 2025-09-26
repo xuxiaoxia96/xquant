@@ -20,13 +20,13 @@ var (
 )
 
 // 股票池文件
-func getStockPoolFilename() string {
+func GetStockPoolFilename() string {
 	filename := filepath.Join(cache.GetQmtCachePath(), filenameStockPool)
 	return filename
 }
 
 // 从本地缓存加载股票池
-func getStockPoolFromCache() (list []StockPool) {
+func GetStockPoolFromCache() (list []StockPool) {
 	filename := getStockPoolFilename()
 	err := api.CsvToSlices(filename, &list)
 	_ = err
@@ -34,7 +34,7 @@ func getStockPoolFromCache() (list []StockPool) {
 }
 
 // 刷新本地股票池缓存
-func saveStockPoolToCache(list []StockPool) {
+func SaveStockPoolToCache(list []StockPool) {
 	filename := getStockPoolFilename()
 	// 强制刷新股票池
 	err := api.SlicesToCsv(filename, list, true)
@@ -43,7 +43,7 @@ func saveStockPoolToCache(list []StockPool) {
 }
 
 // 股票池合并
-func stockPoolMerge(model models.Strategy, date string, orders []models.Statistics, maximumNumberOfAvailablePurchases int) {
+func StockPoolMerge(model models.Strategy, date string, orders []models.Statistics, maximumNumberOfAvailablePurchases int) {
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
 	localStockPool := getStockPoolFromCache()

@@ -3,6 +3,7 @@ package storages
 import (
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/logger"
+
 	"xquant/pkg/config"
 	"xquant/pkg/models"
 	"xquant/pkg/trader"
@@ -29,40 +30,47 @@ func strategyOrderIsFinished(model models.Strategy) bool {
 	return total >= tradeRule.Total
 }
 
-// 检查买入订单, 条件满足则买入
-func checkOrderForBuy(list []StockPool, model models.Strategy, date string) bool {
+// CheckOrderForBuy 检查买入订单, 条件满足则买入
+func CheckOrderForBuy(list []StockPool, model models.Strategy, date string) bool {
 	// 1. 判断是否交易日
 	if !exchange.DateIsTradingDay() {
 		// 非交易日
 		logger.Errorf("%s[%d]: 非交易日, 放弃", model.Name(), model.Code())
 		return false
 	}
+
 	// 2. 获取策略参数
 	strategyParameter := config.GetStrategyParameterByCode(model.Code())
 	if strategyParameter == nil || !strategyParameter.BuyEnable() {
 		logger.Errorf("%s[%d]: 策略未配置或不买入, 放弃", model.Name(), model.Code())
 		return false
 	}
+
 	// 3. 判断交易时段
 	if !strategyParameter.Session.IsTrading() {
 		// 非交易时段
 		logger.Errorf("%s[%d]: 非交易时段, 放弃", model.Name(), model.Code())
 		return false
 	}
+
 	// 4. 校对交易日期
 	tradeDate := exchange.FixTradeDate(date)
 	direction := trader.BUY
+
 	// 5. 统计指定交易日的策略已执行买入的标的数量
 	numberOfStrategy := CountStrategyOrders(tradeDate, model, direction)
 	if numberOfStrategy >= strategyParameter.Total {
 		logger.Errorf("%s %s: 计划买入=%d, 已完成=%d. ", tradeDate, model.Name(), strategyParameter.Total, numberOfStrategy)
 		return true
 	}
+
 	// 6. 策略是否盘中实时订单
 	isTickOrder := strategyParameter.Flag == models.OrderFlagTick
+
 	// 7. 策略最大可交易标的配额余量
 	//remainQuota := strategyParameter.Total - numberOfStrategy
 	length := len(list)
+
 	// 8. 统计有多少标的可以买入, 留给后面统一计算可用资金
 	totalTarget := numberOfStrategy
 	var traderTargets []*StockPool
@@ -91,6 +99,7 @@ func checkOrderForBuy(list []StockPool, model models.Strategy, date string) bool
 		totalTarget += 1
 		traderTargets = append(traderTargets, v)
 	}
+
 	// 9. 计算单只标的最多可用多少资金量
 	quotaForTheNumberOfTargets := strategyParameter.Total
 	// 9.1 非实时订单的head和tail类型订单, 用不超过配额数的订单数重新核定单一交易标的的可用金额
@@ -112,6 +121,7 @@ func checkOrderForBuy(list []StockPool, model models.Strategy, date string) bool
 		logger.Errorf("%s[%d]: 可用资金为0, 放弃", model.Name(), model.Code())
 		return false
 	}
+
 	// 10. 遍历订单
 	length = len(traderTargets)
 	for i := 0; i < length && numberOfStrategy < quotaForTheNumberOfTargets; i++ {
@@ -160,5 +170,6 @@ func checkOrderForBuy(list []StockPool, model models.Strategy, date string) bool
 		v.OrderId = orderId
 		v.Status |= StrategyOrderSucceeded
 	}
+
 	return numberOfStrategy >= quotaForTheNumberOfTargets
 }

@@ -1,15 +1,17 @@
 package tracker
 
 import (
-	"gitee.com/quant1x/exchange"
-	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/logger"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"gitee.com/quant1x/exchange"
+	"gitee.com/quant1x/gox/api"
+
 	"xquant/pkg/cache"
 	"xquant/pkg/log"
 	"xquant/pkg/models"
+	"xquant/pkg/storages"
 )
 
 const (
@@ -48,7 +50,7 @@ func saveStockPoolToCache(list []StockPool) error {
 func stockPoolMerge(model models.Strategy, date string, orders []models.Statistics, maximumNumberOfAvailablePurchases int) {
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
-	localStockPool := getStockPoolFromCache()
+	localStockPool := storages.GetStockPoolFromCache()
 	cacheStatistics := map[string]*StockPool{}
 	tradeDate := exchange.FixTradeDate(date)
 	for i, v := range orders {
@@ -99,15 +101,18 @@ func stockPoolMerge(model models.Strategy, date string, orders []models.Statisti
 			continue
 		}
 		v.UpdateTime = updateTime
-		logger.Infof("%s[%d]: buy queue append %s", model.Name(), model.Code(), v.Code)
+		log.Infof("%s[%d]: buy queue append %s", model.Name(), model.Code(), v.Code)
 		newList = append(newList, *v)
 	}
 	// 如果有新增标的, 则执行交易指令
 	if len(newList) > 0 {
 		localStockPool = append(localStockPool, newList...)
-		logger.Infof("检查是否需要委托下单...")
-		checkOrderForBuy(localStockPool, model, date)
-		logger.Infof("检查是否需要委托下单...OK")
-		saveStockPoolToCache(localStockPool)
+		log.Infof("检查是否需要委托下单...")
+		storages.CheckOrderForBuy(localStockPool, model, date)
+		log.Infof("检查是否需要委托下单...OK")
+		err := saveStockPoolToCache(localStockPool)
+		if err != nil {
+			log.Errorf("saveStockPoolToCache error: %s", err)
+		}
 	}
 }

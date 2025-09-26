@@ -53,8 +53,8 @@ func HandleTrackerResult(model models.Strategy, sortedSnapshots []factors.QuoteS
 // 同时计算当前交易日、更新时间，纯数据处理，无副作用
 func buildStatistics(snapshots []factors.QuoteSnapshot) ([]models.Statistics, string, string, error) {
 	// 1. 计算基础时间信息（当前交易日、更新时间）
-	today := exchange.IndexToday()
-	dates := exchange.TradeRange(exchange.MARKET_CN_FIRST_DATE, today)
+	today := time.Now().Format("2006-01-02")
+	dates := exchange.TradingDateRange(exchange.MARKET_CN_FIRST_DATE, today)
 	if len(dates) == 0 {
 		return nil, "", "", errors.New("无有效交易日数据")
 	}
@@ -73,12 +73,11 @@ func buildStatistics(snapshots []factors.QuoteSnapshot) ([]models.Statistics, st
 			currentDate = dates[len(dates)-2]
 		} else if nowTime >= exchange.CN_TradingStartTime && nowTime <= exchange.CN_TradingStopTime {
 			// 盘中：用当前时间作为更新时间
-			updateTime = now.Format(exchange.TimeOnly)
+			updateTime = now.Format(time.TimeOnly)
 		}
 	}
 
 	// 2. 快照转换为统计模型
-	orderCreateTime := factors.GetTimestamp()
 	var stats []models.Statistics
 	for _, snap := range snapshots {
 		// 基础字段赋值
@@ -100,7 +99,7 @@ func buildStatistics(snapshots []factors.QuoteSnapshot) ([]models.Statistics, st
 			Speed:                snap.Rate,
 			ChangePower:          snap.ChangePower,
 			AverageBiddingVolume: snap.AverageBiddingVolume,
-			UpdateTime:           orderCreateTime,
+			UpdateTime:           factors.GetTimestamp(),
 		}
 
 		// 计算趋势描述（低开/平开/高开 + 回落/拉升 + 强势/弱势）
@@ -235,8 +234,7 @@ func processStockPool(model models.Strategy, date string, stats []models.Statist
 
 	// 4. 转换统计数据为股票池格式，存入临时缓存
 	cacheStats := make(map[string]*StockPool)
-	now := time.Now()
-	updateTime := now.Format(cache.TimeStampMilli)
+	updateTime := time.Now().Format(cache.TimeStampMilli)
 	orderCreateTime := stats[0].UpdateTime // 复用统计数据的创建时间
 
 	for i, stat := range stats {

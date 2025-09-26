@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 
-	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/concurrent"
+
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
 	"xquant/pkg/factors"
@@ -149,16 +150,20 @@ func CheckoutStrategy(strategyNumber uint64) (Strategy, error) {
 
 // UsageStrategyList 输出策略列表
 func UsageStrategyList() string {
-	// 规则按照kind排序
-	kinds := api.Keys(_mapStrategies)
-	slices.Sort(kinds)
-	usage := ""
-	for _, kind := range kinds {
-		if rule, ok := _mapStrategies[kind]; ok {
-			usage += fmt.Sprintf("%d: %s\n", kind, rule.Name())
-		}
+	// 直接手动获取keys，避免迭代器兼容性问题
+	kinds := make([]ModelKind, 0, len(_mapStrategies))
+	for kind := range _mapStrategies {
+		kinds = append(kinds, kind)
 	}
-	return usage
+
+	slices.Sort(kinds)
+
+	var sb strings.Builder
+	for _, kind := range kinds {
+		rule := _mapStrategies[kind]
+		sb.WriteString(fmt.Sprintf("%d: %s\n", kind, rule.Name()))
+	}
+	return sb.String()
 }
 
 type StrategySummary struct {

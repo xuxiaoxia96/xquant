@@ -129,7 +129,7 @@ func snapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter)
 	// 排序股票
 	sortedSnapshots := sortStocks(model, filteredSnapshots)
 
-	// 输出结果
+	// “数据转换→表格输出→股票池→交易检查”流程
 	tracker.HandleTrackerResult(model, sortedSnapshots)
 }
 
