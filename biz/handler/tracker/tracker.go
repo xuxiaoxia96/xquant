@@ -100,12 +100,10 @@ func SnapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter)
 		code := stockCodes[start]
 		securityCode := exchange.CorrectSecurityCode(code)
 
-		// TODO: 为什么过滤掉指数？
 		if exchange.AssertIndexBySecurityCode(securityCode) {
 			continue
 		}
 
-		// TODO: 取行情快照缓存
 		v := models.GetTickFromMemory(securityCode)
 		if v != nil {
 			// 转换
