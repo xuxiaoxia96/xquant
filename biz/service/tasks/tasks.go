@@ -40,16 +40,7 @@ const (
 )
 
 func init() {
-	err := Register(keyCronResetNetwork, CronTriggerNetwork, jobResetNetwork)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	// 定时重置缓存
-	err = Register(keyCronReset, CronTriggerInit, jobGlobalReset)
-	if err != nil {
-		logger.Fatal(err)
-	}
+	var err error
 
 	// 实时更新快照
 	err = Register(keyCronUpdateSnapshot, CronTickInterval, jobUpdateSnapshot)
@@ -59,18 +50,6 @@ func init() {
 
 	// 实时更新K线
 	err = Register(keyCronRealTimeKLine, CronDefaultInterval, jobRealtimeKLine)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	//// 更新全部
-	//err = Register(keyCronUpdateAll, CronDefaultInterval, jobUpdateAll)
-	//if err != nil {
-	//	logger.Fatal(err)
-	//}
-
-	// 一刀切卖出
-	err = Register(keyCronCookieCutterSell, CronDefaultInterval, jobOneSizeFitsAllSales)
 	if err != nil {
 		logger.Fatal(err)
 	}
