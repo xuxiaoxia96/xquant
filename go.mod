@@ -20,6 +20,7 @@ require (
 	github.com/hertz-contrib/gzip v0.0.3
 	github.com/jinzhu/copier v0.4.0
 	github.com/robfig/cron v1.2.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621
