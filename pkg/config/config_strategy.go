@@ -90,8 +90,8 @@ func (s *StrategyParameter) initExclude() {
 func (s *StrategyParameter) Filter(codes []string) []string {
 	s.initExclude()
 	// 过滤需要忽略的板块成份股
-	newCodeList := api.Filter(codes, func(s string) bool {
-		return !slices.Contains(s.excludeCodes, s)
+	newCodeList := api.Filter(codes, func(code string) bool {
+		return !slices.Contains(s.excludeCodes, code)
 	})
 	newCodeList = api.SliceUnique(newCodeList, func(a string, b string) int {
 		if a < b {

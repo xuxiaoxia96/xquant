@@ -3,11 +3,12 @@ package shse
 import (
 	"encoding/json"
 	"fmt"
+	urlpkg "net/url"
+	"time"
+
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/http"
 	"gitee.com/quant1x/num"
-	urlpkg "net/url"
-	"xquant/pkg/utils"
 )
 
 const (
@@ -44,7 +45,7 @@ type sseSecurityEntity struct {
 
 // GetSecurityList 获取证券代码列表
 func GetSecurityList() (list []sseSecurityEntity, err error) {
-	timestamp := utils.Timestamp()
+	timestamp := time.Now().UnixMilli()
 	params := urlpkg.Values{
 		"_":            {fmt.Sprintf("%d", timestamp)},
 		"isPagination": {"false"},
@@ -71,7 +72,7 @@ func GetSecurityList() (list []sseSecurityEntity, err error) {
 		return
 	}
 	for _, vs := range raw.List {
-		arr := []string{}
+		var arr []string
 		for _, v := range vs {
 			arr = append(arr, num.AnyToString(v))
 		}
