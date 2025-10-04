@@ -4,7 +4,6 @@ package tracker
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	tracker "xquant/biz/handler/tracker"
 )
 
 /*

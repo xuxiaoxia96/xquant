@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"xquant/pkg/config/env"
 
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"

@@ -5,7 +5,7 @@ import (
 	"gitee.com/quant1x/gotdx/quotes"
 	"gitee.com/quant1x/gox/api"
 	"xquant/pkg/datasource/base"
-	"xquant/pkg/datasource/dfcf"
+	"xquant/pkg/datasource/easy_money"
 )
 
 type top10ShareHolder struct {
@@ -25,14 +25,14 @@ func checkoutShareHolder(securityCode, featureDate string) *top10ShareHolder {
 	})
 	xdxrInfo := checkoutCapital(xdxrs, featureDate)
 	if xdxrInfo != nil && exchange.AssertStockBySecurityCode(securityCode) {
-		list := dfcf.GetCacheShareHolder(securityCode, featureDate)
+		list := easy_money.GetCacheShareHolder(securityCode, featureDate)
 		capital := xdxrInfo.HouLiuTong * 10000
 		totalCapital := xdxrInfo.HouZongGuBen * 10000
 		top10Capital, freeCapital, capitalChanged, increaseRatio, reductionRatio := ComputeFreeCapital(list, capital)
 		if freeCapital < 0 {
 			top10Capital, freeCapital, capitalChanged, increaseRatio, reductionRatio = ComputeFreeCapital(list, totalCapital)
 		}
-		frontList := dfcf.GetCacheShareHolder(securityCode, featureDate, 2)
+		frontList := easy_money.GetCacheShareHolder(securityCode, featureDate, 2)
 		frontTop10Capital, _, _, _, _ := ComputeFreeCapital(frontList, totalCapital)
 		shareHolder := top10ShareHolder{
 			Code:           securityCode,

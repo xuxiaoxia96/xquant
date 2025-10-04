@@ -1,11 +1,13 @@
 package factors
 
 import (
+	"math"
+
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pandas"
 	. "gitee.com/quant1x/pandas/formula"
-	"math"
+
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
 	"xquant/pkg/utils"

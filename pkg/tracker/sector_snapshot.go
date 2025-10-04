@@ -3,12 +3,12 @@ package tracker
 import (
 	"fmt"
 
-	"gitee.com/quant1x/engine/factors"
-	"gitee.com/quant1x/engine/models"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/num"
+	"xquant/pkg/factors"
+	"xquant/pkg/models"
 )
 
 // 板块扫描
@@ -38,7 +38,7 @@ func scanSectorSnapshots(pbarIndex *int, blockType securities.BlockType, isHead 
 	for i := 0; i < blockCount; i++ {
 		bar.Add(1)
 		blockCode := blockCodes[i]
-		snapshot := models.GetStrategySnapshot(blockCode)
+		snapshot := models.SnapshotMgr.GetStrategySnapshot(blockCode)
 		if snapshot == nil {
 			continue
 		}

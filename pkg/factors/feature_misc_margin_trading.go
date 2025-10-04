@@ -23,7 +23,7 @@ func MarginTradingTargetInit(date string) {
 	_, featureDate := cache.CorrectDate(date)
 	list := easy_money.GetMarginTradingList(featureDate)
 	if len(list) == 0 {
-		logger.Errorf("date = %s, 没有融资融券数据", date)
+		log.Errorf("date = %s, 没有融资融券数据", date)
 		return
 	}
 	for _, v := range list {

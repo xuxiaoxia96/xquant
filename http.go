@@ -8,12 +8,13 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"xquant/pkg/log"
-	"xquant/pkg/utils"
 
 	"github.com/cloudwego/hertz/pkg/app/middlewares/server/recovery"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/hertz-contrib/gzip"
+
+	"xquant/pkg/log"
+	"xquant/pkg/utils"
 )
 
 var finalizeOnce sync.Once

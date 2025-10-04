@@ -1,149 +1,161 @@
-package tracker
+package update
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"time"
+	_ "os"
+	"strings"
+	_ "syscall"
 
-	"gitee.com/quant1x/exchange"
-	"gitee.com/quant1x/gox/tags"
-	"gitee.com/quant1x/num"
-	"gitee.com/quant1x/pkg/tablewriter"
+	_ "github.com/spf13/cobra"
 
-	"xquant/pkg/factors"
-	"xquant/pkg/models"
+	"xquant/pkg/cache"
+	"xquant/pkg/log"
 	"xquant/pkg/storages"
 )
 
-// OutputTable 输出表格
-func OutputTable(model models.Strategy, stockSnapshots []factors.QuoteSnapshot) {
-	today := exchange.IndexToday()
-	dates := exchange.TradingDateRange(exchange.MARKET_CN_FIRST_DATE, today)
-	days := len(dates)
-	currentlyDay := dates[days-1]
-	updateTime := "15:00:59"
-	//todayIsTradeDay := false
-	if today == currentlyDay {
-		//todayIsTradeDay = true
-		now := time.Now()
-		nowTime := now.Format(exchange.CN_SERVERTIME_FORMAT)
-		if nowTime < exchange.CN_TradingStartTime {
-			currentlyDay = dates[days-2]
-		} else if nowTime >= exchange.CN_TradingStartTime && nowTime <= exchange.CN_TradingStopTime {
-			updateTime = now.Format(exchange.TimeOnly)
-		}
+// --------------------------
+// 1. 核心参数结构体（对齐 TrackerCoreParams 风格）
+// UpdateCoreParams 数据更新的核心参数，支持 cmd/HTTP 共用
+type UpdateCoreParams struct {
+	IsFullUpdate     bool     // 是否全量更新（对应 cmd --all，HTTP 请求 is_full 字段）
+	BaseKeywords     []string // 基础数据更新关键词（对应 cmd --base，HTTP base_keywords 字段）
+	FeaturesKeywords []string // 特征数据更新关键词（对应 cmd --features，HTTP features_keywords 字段）
+}
+
+// 全局进度条索引（若仅更新逻辑使用，可后续改为参数传入，当前保持兼容）
+var barIndex = 1
+
+// --------------------------
+// 2. 核心更新函数（对齐 RunTrackerCore 风格）
+// RunUpdateCore 数据更新核心逻辑，支持 cmd/HTTP 调用
+// ctx: 上下文（用于日志关联、中断信号传递，如 HTTP 请求取消、cmd Ctrl+C）
+// params: 更新核心参数（统一 cmd/HTTP 入参格式）
+func RunUpdateCore(ctx context.Context, params UpdateCoreParams) {
+	// 步骤1：校验参数合法性（提前拦截无效参数，减少后续无效执行）
+	if err := validateCoreParams(params); err != nil {
+		log.CtxErrorf(ctx, "[RunUpdateCore] 参数校验失败: %v", err)
+		fmt.Printf("错误: %v\n", err)
+		return
 	}
 
-	// 控制台输出表格
-	tbl := tablewriter.NewWriter(os.Stdout)
-	tbl.SetHeader(tags.GetHeadersByTags(models.Statistics{}))
-	orderCount := models.CountTopN
-	if orderCount > len(stockSnapshots) {
-		orderCount = len(stockSnapshots)
+	// 步骤2：获取并校正可更新日期（依赖 cache 包，逻辑不变）
+	currentDate := cache.DefaultCanUpdateDate()
+	if currentDate == "" {
+		errMsg := "未获取到可更新日期，请检查系统日期配置"
+		log.CtxErrorf(ctx, "[RunUpdateCore] %s", errMsg)
+		fmt.Printf("错误: %s\n", errMsg)
+		return
 	}
-	votingResults := []models.Statistics{}
-	//stockSnapshots = stockSnapshots[:orderCount]
-	orderCreateTime := factors.GetTimestamp()
-	for _, v := range stockSnapshots {
-		ticket := models.Statistics{
-			Date:                 currentlyDay,              // 日期
-			Code:                 v.SecurityCode,            // 证券代码
-			Name:                 v.Name,                    // 证券名称
-			Active:               int(v.Active),             // 活跃度
-			LastClose:            v.LastClose,               // 昨收
-			Open:                 v.Open,                    // 开盘价
-			OpenRaise:            v.OpeningChangeRate,       // 开盘涨幅
-			Price:                v.Price,                   // 现价
-			UpRate:               v.ChangeRate,              // 涨跌幅
-			OpenPremiumRate:      v.PremiumRate,             // 集合竞价买入溢价率
-			OpenVolume:           v.OpenVolume,              // 集合竞价-开盘量, 单位是股
-			TurnZ:                v.OpenTurnZ,               // 开盘换手率z
-			QuantityRatio:        v.OpenQuantityRatio,       // 开盘量比
-			AveragePrice:         v.Amount / float64(v.Vol), // 均价
-			Speed:                v.Rate,                    // 涨速
-			ChangePower:          v.ChangePower,             // 涨跌力度
-			AverageBiddingVolume: v.AverageBiddingVolume,    // 委比
-			UpdateTime:           orderCreateTime,           // 更新时间
-		}
-		if v.Open < v.LastClose {
-			ticket.Tendency += "低开"
-		} else if v.Open == v.LastClose {
-			ticket.Tendency += "平开"
-		} else {
-			ticket.Tendency += "高开"
-		}
-		if ticket.AveragePrice < v.Open {
-			ticket.Tendency += ",回落"
-		} else {
-			ticket.Tendency += ",拉升"
-		}
-		if v.Price > ticket.AveragePrice {
-			ticket.Tendency += ",强势"
-		} else {
-			ticket.Tendency += ",弱势"
-		}
+	cacheDate, featureDate := cache.CorrectDate(currentDate)
+	log.CtxInfof(ctx, "[RunUpdateCore] 开始更新，日期：cache=%s, feature=%s", cacheDate, featureDate)
 
-		// 缓存个股所在的板块列表
-		// 行业板块
-		// 概念板块
-		// 地域板块
-		bs, ok := __stock2Block[ticket.Code]
-		if ok {
-			tb := bs[0]
-			if block, ok := __mapBlockData[tb.Code]; ok {
-				ticket.BlockName = block.Name
-				ticket.BlockRate = block.ChangeRate
-				ticket.BlockTop = block.Rank
-				shot, ok1 := __stock2Rank[ticket.Code]
-				if ok1 {
-					ticket.BlockRank = shot.TopNo
-				}
-			}
-		}
-		votingResults = append(votingResults, ticket)
+	// 步骤3：按参数分支执行更新（核心业务逻辑）
+	switch {
+	case params.IsFullUpdate:
+		handleFullUpdateCore(ctx, cacheDate, featureDate)
+	case len(params.BaseKeywords) > 0:
+		handleBaseUpdateCore(ctx, cacheDate, featureDate, params.BaseKeywords...)
+	case len(params.FeaturesKeywords) > 0:
+		handleFeaturesUpdateCore(ctx, cacheDate, featureDate, params.FeaturesKeywords...)
 	}
+}
 
-	gtP1 := 0 // 存在溢价
-	gtP2 := 0 // 超过1%
-	gtP3 := 0
-	gtP4 := 0
-	gtP5 := 0
-	yields := 0.00
-	for _, v := range votingResults {
-		rate := num.NetChangeRate(v.Open, v.Price)
-		if rate > 0 {
-			gtP1 += 1
+// --------------------------
+// 3. 参数校验辅助函数（提前拦截无效场景）
+func validateCoreParams(params UpdateCoreParams) error {
+	// 校验规则：全量更新 和 定向更新（基础/特征）二选一，且定向更新关键词非空
+	if !params.IsFullUpdate {
+		if len(params.BaseKeywords) == 0 && len(params.FeaturesKeywords) == 0 {
+			return fmt.Errorf("非全量更新时，必须指定基础数据关键词（BaseKeywords）或特征数据关键词（FeaturesKeywords）")
 		}
-		if rate >= 1.00 {
-			gtP2 += 1
+		// 可选：校验关键词去重（避免重复更新同一插件）
+		params.BaseKeywords = removeDuplicateKeywords(params.BaseKeywords)
+		params.FeaturesKeywords = removeDuplicateKeywords(params.FeaturesKeywords)
+	}
+	return nil
+}
+
+// 关键词去重（辅助函数）
+func removeDuplicateKeywords(keywords []string) []string {
+	seen := make(map[string]struct{}, len(keywords))
+	unique := make([]string, 0, len(keywords))
+	for _, kw := range keywords {
+		kw = strings.TrimSpace(kw)
+		if kw == "" {
+			continue
 		}
-		if rate >= 2.00 {
-			gtP3 += 1
+		if _, ok := seen[kw]; !ok {
+			seen[kw] = struct{}{}
+			unique = append(unique, kw)
 		}
-		if rate >= 3.00 {
-			gtP4 += 1
-		}
-		if rate >= 5.00 {
-			gtP5 += 1
-		}
-		yields += rate
-		tbl.Append(tags.GetValuesByTags(v))
+	}
+	return unique
+}
+
+// --------------------------
+// 4. 具体更新实现（对齐核心函数命名风格）
+// handleFullUpdateCore 全量更新（基础数据 + 特征数据）
+func handleFullUpdateCore(ctx context.Context, cacheDate, featureDate string) {
+	log.CtxInfof(ctx, "[handleFullUpdateCore] 开始全量更新：基础数据 + 特征数据")
+
+	// 1. 更新所有基础数据
+	basePlugins := cache.Plugins(cache.PluginMaskBaseData)
+	log.CtxInfof(ctx, "[handleFullUpdateCore] 基础数据插件数量: %d", len(basePlugins))
+	storages.DataSetUpdate(barIndex, featureDate, basePlugins, cache.OpUpdate)
+
+	// 2. 更新所有特征数据
+	featurePlugins := cache.Plugins(cache.PluginMaskFeature)
+	log.CtxInfof(ctx, "[handleFullUpdateCore] 特征数据插件数量: %d", len(featurePlugins))
+	if err := storages.FeaturesUpdate(&barIndex, cacheDate, featureDate, featurePlugins, cache.OpUpdate); err != nil {
+		log.CtxErrorf(ctx, "[handleFullUpdateCore] 特征数据全量更新失败: %v", err)
+		fmt.Printf("警告: 特征数据全量更新失败: %v\n", err)
+		return
 	}
 
-	yields /= float64(len(votingResults))
-	fmt.Println() // 输出一个换行
-	// 表格渲染
-	tbl.Render()
-	count := len(stockSnapshots)
-	fmt.Println()
+	log.CtxInfof(ctx, "[handleFullUpdateCore] 全量更新完成")
+	fmt.Println("全量更新完成")
+}
 
-	fmt.Println(currentlyDay + " " + updateTime + ", 胜率统计:")
-	fmt.Printf("\t==> 胜    率: %d/%d, %.2f%%, 收益率: %.2f%%\n", gtP1, count, 100*float64(gtP1)/float64(count), yields)
-	fmt.Printf("\t==> 溢价超1%%: %d/%d, %.2f%%\n", gtP2, count, 100*float64(gtP2)/float64(count))
-	fmt.Printf("\t==> 溢价超2%%: %d/%d, %.2f%%\n", gtP3, count, 100*float64(gtP3)/float64(count))
-	fmt.Printf("\t==> 溢价超3%%: %d/%d, %.2f%%\n", gtP4, count, 100*float64(gtP4)/float64(count))
-	fmt.Printf("\t==> 溢价超5%%: %d/%d, %.2f%%\n", gtP5, count, 100*float64(gtP5)/float64(count))
-	fmt.Println()
-	// 存储
-	storages.OutputStatistics(model, currentlyDay, votingResults)
+// handleBaseUpdateCore 基础数据定向更新（按关键词）
+func handleBaseUpdateCore(ctx context.Context, cacheDate, featureDate string, keywords ...string) {
+	// 按关键词筛选插件，无匹配则提示并退出（避免默认全量，减少意外更新）
+	plugins := cache.PluginsWithName(cache.PluginMaskBaseData, keywords...)
+	if len(plugins) == 0 {
+		errMsg := fmt.Sprintf("无匹配关键词【%v】的基础数据插件，请检查关键词是否正确", keywords)
+		log.CtxWarnf(ctx, "[handleBaseUpdateCore] %s", errMsg)
+		fmt.Printf("警告: %s\n", errMsg)
+		return
+	}
+
+	log.CtxInfof(ctx, "[handleBaseUpdateCore] 开始基础数据定向更新，关键词：%v，插件数量：%d", keywords, len(plugins))
+	// 执行更新（忽略 cacheDate，明确标注）
+	_ = cacheDate
+	storages.DataSetUpdate(barIndex, featureDate, plugins, cache.OpUpdate)
+
+	log.CtxInfof(ctx, "[handleBaseUpdateCore] 基础数据定向更新完成")
+	fmt.Println("基础数据定向更新完成")
+}
+
+// handleFeaturesUpdateCore 特征数据定向更新（按关键词）
+func handleFeaturesUpdateCore(ctx context.Context, cacheDate, featureDate string, keywords ...string) {
+	// 按关键词筛选插件，无匹配则提示并退出
+	plugins := cache.PluginsWithName(cache.PluginMaskFeature, keywords...)
+	if len(plugins) == 0 {
+		errMsg := fmt.Sprintf("无匹配关键词【%v】的特征数据插件，请检查关键词是否正确", keywords)
+		log.CtxWarnf(ctx, "[handleFeaturesUpdateCore] %s", errMsg)
+		fmt.Printf("警告: %s\n", errMsg)
+		return
+	}
+
+	log.CtxInfof(ctx, "[handleFeaturesUpdateCore] 开始特征数据定向更新，关键词：%v，插件数量：%d", keywords, len(plugins))
+	// 执行更新
+	if err := storages.FeaturesUpdate(&barIndex, cacheDate, featureDate, plugins, cache.OpUpdate); err != nil {
+		log.CtxErrorf(ctx, "[handleFeaturesUpdateCore] 特征数据定向更新失败: %v", err)
+		fmt.Printf("警告: 特征数据定向更新失败: %v\n", err)
+		return
+	}
+
+	log.CtxInfof(ctx, "[handleFeaturesUpdateCore] 特征数据定向更新完成")
+	fmt.Println("特征数据定向更新完成")
 }

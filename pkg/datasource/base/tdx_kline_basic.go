@@ -13,6 +13,7 @@ import (
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/num"
+
 	"xquant/pkg/cache"
 )
 
@@ -23,16 +24,16 @@ var (
 
 // KLine 日K线基础结构
 type KLine struct {
-	Date     string  `name:"日期" dataframe:"date"`       // 日期
-	Open     float64 `name:"开盘" dataframe:"open"`       // 开盘价
-	Close    float64 `name:"收盘" dataframe:"close"`      // 收盘价
-	High     float64 `name:"最高" dataframe:"high"`       // 最高价
-	Low      float64 `name:"最低" dataframe:"low"`        // 最低价
+	Date     string  `name:"日期" dataframe:"date"`         // 日期
+	Open     float64 `name:"开盘" dataframe:"open"`         // 开盘价
+	Close    float64 `name:"收盘" dataframe:"close"`        // 收盘价
+	High     float64 `name:"最高" dataframe:"high"`         // 最高价
+	Low      float64 `name:"最低" dataframe:"low"`          // 最低价
 	Volume   float64 `name:"成交量(股)" dataframe:"volume"` // 成交量
 	Amount   float64 `name:"成交额(元)" dataframe:"amount"` // 成交金额
 	Up       int     `name:"上涨/外盘" dataframe:"up"`      // 上涨家数
 	Down     int     `name:"下跌/内盘" dataframe:"down"`    // 下跌家数
-	Datetime string  `name:"时间" dataframe:"datetime"`   // 时间
+	Datetime string  `name:"时间" dataframe:"datetime"`     // 时间
 }
 
 func (k *KLine) Apply(factor func(p float64) float64) {
@@ -64,7 +65,7 @@ func UpdateAllBasicKLine(securityCode string) []KLine {
 	// 1. 确定本地有效数据最后1条数据作为拉取数据的开始日期
 	startDate := exchange.MARKET_CH_FIRST_LISTTIME
 	securityCode = exchange.CorrectSecurityCode(securityCode)
-	isIndex := exchange.AssertIndexBySecurityCode(securityCode)
+
 	cacheKLines := LoadBasicKline(securityCode)
 	kLength := len(cacheKLines)
 	var klineDaysOffset = DataDaysDiff
@@ -106,16 +107,17 @@ func UpdateAllBasicKLine(securityCode string) []KLine {
 
 	// 2. 确定结束日期
 	currentTradingDate := exchange.GetCurrentlyDay()
-	endDate := exchange.Today()
-	ts := exchange.TradingDateRange(startDate, endDate)
+	timespan := exchange.TradingDateRange(startDate, time.Now().Format("2006-01-02"))
 	history := make([]quotes.SecurityBar, 0)
 	step := uint16(quotes.SECURITY_BARS_MAX)
-	total := uint16(len(ts))
+	total := uint16(len(timespan))
 	start := uint16(0)
 	hs := make([]quotes.SecurityBarsReply, 0)
+
+	// basic默认日线
 	kType := uint16(proto.KLINE_TYPE_RI_K)
 	tdxApi := gotdx.GetTdxApi()
-	// 3. 拉取数据
+	// 3. 分页拉取K线数据（处理接口分页限制）
 	for {
 		count := step
 		if total-start >= step {
@@ -127,7 +129,8 @@ func UpdateAllBasicKLine(securityCode string) []KLine {
 		var err error
 		retryTimes := 0
 		for retryTimes < quotes.DefaultRetryTimes {
-			if isIndex {
+			// 判断是否是指数
+			if exchange.AssertIndexBySecurityCode(securityCode) {
 				data, err = tdxApi.GetIndexBars(securityCode, kType, start, count)
 			} else {
 				data, err = tdxApi.GetKLine(securityCode, kType, start, count)
@@ -196,6 +199,7 @@ func UpdateAllBasicKLine(securityCode string) []KLine {
 		// 只前复权当日数据
 		calculatePreAdjustedStockPrice(securityCode, newKLines, startDate)
 	}
+
 	// 8. 拼接缓存和新增的数据
 	var klines []KLine
 	// 8.1 先截取本地缓存的数据
@@ -251,7 +255,11 @@ func calculatePreAdjustedStockPrice(securityCode string, kLines []KLine, startDa
 			continue
 		}
 		xdxrDate := xdxr.Date
+
+		// 计算复权因子：前复权因子=（除权后价格）/（除权前价格）
+		// 例：10送10，除权前价格10元，除权后5元，因子=5/10=0.5
 		factor := xdxr.Adjust()
+		// 对“除权日前”的所有K线进行价格修正
 		for j := 0; j < rows; j++ {
 			kl := &kLines[j]
 			barCurrentDate := kl.Date

@@ -45,7 +45,6 @@ var (
 var (
 	pluginMutex    sync.Mutex
 	mapDataPlugins = map[Kind]DataAdapter{}
-	//setupStatus map[string]bool
 )
 
 // Register 注册插件
@@ -71,54 +70,77 @@ func GetDataAdapter(kind Kind) DataAdapter {
 	return nil
 }
 
-// Plugins 按照类型标志位捡出数据插件
+// Plugins 按照类型标志位筛选数据插件（优化内存分配）
 func Plugins(mask ...Kind) (list []DataAdapter) {
 	pluginMutex.Lock()
 	defer pluginMutex.Unlock()
+
 	pluginType := Kind(0)
 	if len(mask) > 0 {
 		if mask[0] == PluginMaskBaseData || mask[0] == PluginMaskFeature {
 			pluginType = mask[0]
 		}
 	}
-	// TODO: 这个地方的内存申请方面需要优化
-	var kinds []Kind
-	for kind, _ := range mapDataPlugins {
-		if pluginType == 0 || kind&pluginType == pluginType {
-			kinds = append(kinds, kind)
-		}
-	}
-	slices.Sort(kinds)
-	for _, kind := range kinds {
-		plugin, ok := mapDataPlugins[kind]
-		if ok {
-			list = append(list, plugin)
-		}
-	}
-	return
+
+	kinds := filterKindsByType(pluginType, mapDataPlugins)
+	return kindsToPlugins(kinds, mapDataPlugins)
 }
 
 func PluginsWithName(pluginType Kind, keywords ...string) (list []DataAdapter) {
 	pluginMutex.Lock()
 	defer pluginMutex.Unlock()
+
 	if len(keywords) == 0 {
 		return
 	}
-	var kinds []Kind
-	for kind, plugin := range mapDataPlugins {
+
+	kinds := filterKindsByTypeAndKeywords(pluginType, keywords, mapDataPlugins)
+	return kindsToPlugins(kinds, mapDataPlugins)
+}
+
+// filterKindsByType 按类型筛选插件 Kind（返回已排序的 Kind 切片）
+func filterKindsByType(pluginType Kind, plugins map[Kind]DataAdapter) []Kind {
+	matchCount := 0
+	for kind := range plugins {
+		if pluginType == 0 || kind&pluginType == pluginType {
+			matchCount++
+		}
+	}
+	kinds := make([]Kind, 0, matchCount)
+	for kind := range plugins {
+		if pluginType == 0 || kind&pluginType == pluginType {
+			kinds = append(kinds, kind)
+		}
+	}
+	slices.Sort(kinds)
+	return kinds
+}
+
+// filterKindsByTypeAndKeywords 按类型+关键词筛选插件 Kind（返回已排序的 Kind 切片）
+func filterKindsByTypeAndKeywords(pluginType Kind, keywords []string, plugins map[Kind]DataAdapter) []Kind {
+	matchCount := 0
+	for kind, plugin := range plugins {
+		if kind&pluginType == pluginType && slices.Contains(keywords, plugin.Key()) {
+			matchCount++
+		}
+	}
+	kinds := make([]Kind, 0, matchCount)
+	for kind, plugin := range plugins {
 		if kind&pluginType == pluginType && slices.Contains(keywords, plugin.Key()) {
 			kinds = append(kinds, kind)
 		}
 	}
-	if len(kinds) == 0 {
-		return
-	}
 	slices.Sort(kinds)
+	return kinds
+}
+
+// kindsToPlugins 将 Kind 切片转换为 DataAdapter 切片
+func kindsToPlugins(kinds []Kind, plugins map[Kind]DataAdapter) []DataAdapter {
+	list := make([]DataAdapter, 0, len(kinds))
 	for _, kind := range kinds {
-		plugin, ok := mapDataPlugins[kind]
-		if ok {
+		if plugin, ok := plugins[kind]; ok {
 			list = append(list, plugin)
 		}
 	}
-	return
+	return list
 }

@@ -185,10 +185,10 @@ func max(a, b float64) float64 {
 	return b
 }
 
-// min 返回两个 float64 类型值中的最小值
-func min(a, b float64) float64 {
-	if a < b {
-		return a
-	}
-	return b
-}
+//// min 返回两个 float64 类型值中的最小值
+//func min(a, b float64) float64 {
+//	if a < b {
+//		return a
+//	}
+//	return b
+//}

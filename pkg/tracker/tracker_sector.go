@@ -6,9 +6,6 @@ import (
 	"slices"
 	"sort"
 
-	"gitee.com/quant1x/engine/factors"
-	"gitee.com/quant1x/engine/market"
-	"gitee.com/quant1x/engine/models"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
@@ -16,6 +13,10 @@ import (
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pkg/tablewriter"
+
+	"xquant/pkg/factors"
+	"xquant/pkg/market"
+	"xquant/pkg/models"
 )
 
 // ScanSectorForTick 扫描板块
@@ -43,7 +44,7 @@ func ScanSectorForTick(barIndex *int) []string {
 			}
 			tmpBlocks = append(tmpBlocks, *block)
 			__stock2Block[securityCode] = tmpBlocks
-			snapshot := models.GetStrategySnapshot(securityCode)
+			snapshot := models.SnapshotMgr.GetStrategySnapshot(securityCode)
 			if snapshot == nil {
 				continue
 			}

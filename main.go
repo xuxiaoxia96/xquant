@@ -8,9 +8,12 @@ import (
 )
 
 func main() {
-	rootCmd.AddCommand(infoMetricsSeverCmd)
+	rootCmd.AddCommand()
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "root cmd execute error:%v", err)
+		_, err := fmt.Fprintf(os.Stderr, "root cmd execute error:%v", err)
+		if err != nil {
+			return
+		}
 		os.Exit(1)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-// StockPool 股票池
 type StockPool struct {
 	Status       StrategyStatus `name:"策略状态" dataframe:"status"`
 	Date         string         `name:"信号日期" dataframe:"date"`

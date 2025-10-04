@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"xquant/pkg/utils/api_utils"
 )
 
 // copied from model-proxy protocol
@@ -34,7 +36,7 @@ func (e OpenAPIError) HTTPStatusCode() int {
 func NewInvalidParameterError(ctx context.Context, field, reason string, a ...any) OpenAPIError {
 	return OpenAPIError{
 		Code:    "InvalidParameter",
-		Message: fmt.Sprintf("The parameter `%s` specified in the request are not valid: %s. Request id: %s", field, fmt.Sprintf(reason, a...), api_utils.MustFromCtxRequestID(ctx)),
+		Message: fmt.Sprintf("The parameter `%s` specified in the request are not valid: %s. Request id: %s", field, fmt.Sprintf(reason, a...), api_utils.MustFromCtxRequestId(ctx)),
 		Param:   field,
 		Type:    strings.ReplaceAll(http.StatusText(http.StatusBadRequest), " ", ""),
 
@@ -45,7 +47,7 @@ func NewInvalidParameterError(ctx context.Context, field, reason string, a ...an
 func NewAuthenticationError(ctx context.Context) OpenAPIError {
 	return OpenAPIError{
 		Code:    "AuthenticationError",
-		Message: "The API key in the request is missing or invalid. Request id: " + api_utils.MustFromCtxRequestID(ctx),
+		Message: "The API key in the request is missing or invalid. Request id: " + api_utils.MustFromCtxRequestId(ctx),
 		Type:    strings.ReplaceAll(http.StatusText(http.StatusUnauthorized), " ", ""),
 
 		StatusCode: http.StatusUnauthorized,
@@ -55,7 +57,7 @@ func NewAuthenticationError(ctx context.Context) OpenAPIError {
 func NewInternalServiceError(ctx context.Context) OpenAPIError {
 	return OpenAPIError{
 		Code:    "InternalServiceError",
-		Message: "The service encountered an unexpected internal error. Request id: " + api_utils.MustFromCtxRequestID(ctx),
+		Message: "The service encountered an unexpected internal error. Request id: " + api_utils.MustFromCtxRequestId(ctx),
 		Type:    strings.ReplaceAll(http.StatusText(http.StatusInternalServerError), " ", ""),
 
 		StatusCode: http.StatusInternalServerError,
@@ -65,7 +67,7 @@ func NewInternalServiceError(ctx context.Context) OpenAPIError {
 func NewAccessDenied(ctx context.Context) OpenAPIError {
 	return OpenAPIError{
 		Code:    "AccessDenied",
-		Message: "The request failed because you do not have access to the requested resource. Request id: " + api_utils.MustFromCtxRequestID(ctx),
+		Message: "The request failed because you do not have access to the requested resource. Request id: " + api_utils.MustFromCtxRequestId(ctx),
 		Type:    strings.ReplaceAll(http.StatusText(http.StatusForbidden), " ", ""),
 
 		StatusCode: http.StatusForbidden,
@@ -75,7 +77,7 @@ func NewAccessDenied(ctx context.Context) OpenAPIError {
 func NewInvalidEndpoint(ctx context.Context) OpenAPIError {
 	return OpenAPIError{
 		Code:    "InvalidEndpoint.NotFound",
-		Message: "The request targeted an endpoint that does not exist or is invalid. Request id: " + api_utils.MustFromCtxRequestID(ctx),
+		Message: "The request targeted an endpoint that does not exist or is invalid. Request id: " + api_utils.MustFromCtxRequestId(ctx),
 		Type:    strings.ReplaceAll(http.StatusText(http.StatusBadRequest), " ", ""),
 
 		StatusCode: http.StatusNotFound,
@@ -85,7 +87,7 @@ func NewInvalidEndpoint(ctx context.Context) OpenAPIError {
 func NewInvalidBot(ctx context.Context) OpenAPIError {
 	return OpenAPIError{
 		Code:    "InvalidBot",
-		Message: "The request targeted bot that does not exist or is invalid. Request id: " + api_utils.MustFromCtxRequestID(ctx),
+		Message: "The request targeted bot that does not exist or is invalid. Request id: " + api_utils.MustFromCtxRequestId(ctx),
 		Type:    strings.ReplaceAll(http.StatusText(http.StatusBadRequest), " ", ""),
 
 		StatusCode: http.StatusBadRequest,

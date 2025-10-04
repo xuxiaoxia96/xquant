@@ -2,7 +2,9 @@ package factors
 
 import (
 	"context"
+
 	"gitee.com/quant1x/gotdx/quotes"
+
 	"xquant/pkg/cache"
 	"xquant/pkg/datasource/base"
 )
@@ -37,7 +39,6 @@ func (k *DataKLine) GetSecurityCode() string {
 }
 
 func (k *DataKLine) Init(ctx context.Context, date string) error {
-	//_ = barIndex
 	_ = ctx
 	_ = date
 	return nil
@@ -73,12 +74,10 @@ func (k *DataKLine) Print(code string, date ...string) {
 
 func (k *DataKLine) Update(date string) {
 	base.UpdateAllBasicKLine(k.GetSecurityCode())
-	_ = date
 }
 
 func (k *DataKLine) Repair(date string) {
 	base.UpdateAllBasicKLine(k.GetSecurityCode())
-	_ = date
 }
 
 func (k *DataKLine) Increase(snapshot quotes.Snapshot) {

@@ -6,12 +6,6 @@ import (
 	"sort"
 	"time"
 
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/config"
-	"gitee.com/quant1x/engine/factors"
-	"gitee.com/quant1x/engine/market"
-	"gitee.com/quant1x/engine/models"
-	"gitee.com/quant1x/engine/storages"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
@@ -19,6 +13,12 @@ import (
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pkg/tablewriter"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
+	"xquant/pkg/factors"
+	"xquant/pkg/market"
+	"xquant/pkg/models"
+	"xquant/pkg/storages"
 )
 
 var (
@@ -92,7 +92,7 @@ func AllScan(barIndex *int, model models.Strategy) {
 		if exchange.AssertIndexBySecurityCode(securityCode) {
 			continue
 		}
-		v := models.GetTickFromMemory(securityCode)
+		v := models.SnapshotMgr.GetTickFromMemory(securityCode)
 		if v != nil {
 			snapshot := models.QuoteSnapshotFromProtocol(*v)
 			stockSnapshots = append(stockSnapshots, snapshot)

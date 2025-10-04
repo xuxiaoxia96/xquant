@@ -2,9 +2,10 @@ package storages
 
 import (
 	"path/filepath"
-	"xquant/biz/models"
+
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
+	"xquant/pkg/models"
 )
 
 var (
@@ -29,5 +30,5 @@ func OutputStatistics(model models.Strategy, date string, v []models.Statistics)
 		return
 	}
 	topN := tradeRule.Total
-	stockPoolMerge(model, date, v, topN)
+	StockPoolMerge(model, date, v, topN)
 }

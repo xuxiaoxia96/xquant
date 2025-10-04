@@ -3,9 +3,9 @@ package tracker
 import (
 	"fmt"
 
-	"gitee.com/quant1x/engine/models"
 	"gitee.com/quant1x/num"
 	"github.com/fatih/color"
+	"xquant/pkg/models"
 )
 
 // MarketSentiment 市场情绪
@@ -26,7 +26,7 @@ func MarketSentiment() {
 	//defer tdxApi.Close()
 	//stockShots, _ := tdxApi.GetSnapshot([]string{zdjs})
 	//sh880005 := stockShots[0]
-	sh880005 := models.GetTickFromMemory(zdjs)
+	sh880005 := models.SnapshotMgr.GetTickFromMemory(zdjs)
 	//fmt.Printf("%+v\n", sh880005)
 	up := sh880005.BidVol1 + sh880005.BidVol2 + sh880005.BidVol3 + sh880005.BidVol4 + sh880005.BidVol5
 	down := sh880005.AskVol1 + sh880005.AskVol2 + sh880005.AskVol3 + sh880005.AskVol4 + sh880005.AskVol5

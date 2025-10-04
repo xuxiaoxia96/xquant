@@ -5,12 +5,12 @@ import (
 	urlpkg "net/url"
 	"sync"
 
-	"gitee.com/quant1x/engine/cache"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/http"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/pkg/fastjson"
+	"xquant/pkg/cache"
 )
 
 // QuarterlyReports 分页获取季报数据

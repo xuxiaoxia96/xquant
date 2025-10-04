@@ -3,22 +3,22 @@ package backtest
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
+	"github.com/cloudwego/hertz/pkg/app"
 	"golang.org/x/exp/slices"
-	"strings"
+
 	"xquant/biz/handler"
 	"xquant/biz/model/backtest"
-	"xquant/biz/models"
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
 	"xquant/pkg/factors"
-	"xquant/pkg/openapi_error"
-
-	"github.com/cloudwego/hertz/pkg/app"
-
 	"xquant/pkg/log"
+	"xquant/pkg/models"
+	"xquant/pkg/openapi_error"
 )
 
 func CheckStrategy(ctx context.Context, c *app.RequestContext) {

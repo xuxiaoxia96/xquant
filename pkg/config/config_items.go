@@ -3,6 +3,12 @@ package config
 type XquantConfig struct {
 	RedisConfig `mapstructure:",squash"`
 	MySQLConfig `mapstructure:",squash"`
+	EnvConfig   `mapstructure:",squash"`
+}
+
+type EnvConfig struct {
+	IsProduct bool   `mapstructure:"IS_PRODUCT"`
+	LogLevel  string `mapstructure:"LOG_LEVEL"`
 }
 
 type RedisConfig struct {

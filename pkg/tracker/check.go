@@ -5,13 +5,13 @@ import (
 	"slices"
 	"strings"
 
-	"gitee.com/quant1x/engine/cache"
-	"gitee.com/quant1x/engine/config"
-	"gitee.com/quant1x/engine/factors"
-	"gitee.com/quant1x/engine/models"
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx/securities"
 	"gitee.com/quant1x/gox/api"
+	"xquant/pkg/cache"
+	"xquant/pkg/config"
+	"xquant/pkg/factors"
+	"xquant/pkg/models"
 )
 
 // CheckStrategy 检查当前交易日中个股在策略中的执行情况

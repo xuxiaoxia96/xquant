@@ -229,17 +229,17 @@ func processStockPool(model models.Strategy, date string, stats []models.Statist
 	// 3. 从缓存读取本地股票池
 	localStockPool := getStockPoolFromCache()
 	if localStockPool == nil {
-		localStockPool = make([]StockPool, 0)
+		localStockPool = make([]storages.StockPool, 0)
 	}
 
 	// 4. 转换统计数据为股票池格式，存入临时缓存
-	cacheStats := make(map[string]*StockPool)
+	cacheStats := make(map[string]*storages.StockPool)
 	updateTime := time.Now().Format(cache.TimeStampMilli)
 	orderCreateTime := stats[0].UpdateTime // 复用统计数据的创建时间
 
 	for i, stat := range stats {
-		sp := StockPool{
-			Status:       StrategyHit,
+		sp := storages.StockPool{
+			Status:       storages.StrategyHit,
 			Date:         tradeDate,
 			Code:         stat.Code,
 			Name:         stat.Name,
@@ -268,18 +268,18 @@ func processStockPool(model models.Strategy, date string, stats []models.Statist
 		}
 		// 检查是否在新数据中存在
 		if v, exists := cacheStats[local.Key()]; exists {
-			v.Status = StrategyAlreadyExists // 标记为已存在，后续跳过
+			v.Status = storages.StrategyAlreadyExists // 标记为已存在，后续跳过
 		} else {
 			// 新数据中不存在：标记为取消
-			local.Status.Set(StrategyCancel, true)
+			local.Status.Set(storages.StrategyCancel, true)
 			local.UpdateTime = updateTime
 		}
 	}
 
 	// 6. 收集新增的股票池数据（排除已存在的）
-	var newStockPool []StockPool
+	var newStockPool []storages.StockPool
 	for _, v := range cacheStats {
-		if v.Status == StrategyAlreadyExists {
+		if v.Status == storages.StrategyAlreadyExists {
 			continue
 		}
 		v.UpdateTime = updateTime
@@ -331,7 +331,7 @@ func triggerBuyCheck(model models.Strategy, date string, stats []models.Statisti
 	}
 
 	// 3. 筛选可买入的标的（符合策略+可买入状态）
-	var buyTargets []*StockPool
+	var buyTargets []*storages.StockPool
 	// 先从股票池缓存获取最新数据（确保包含新增标的）
 	poolMutex.Lock()
 	localPool := getStockPoolFromCache()
@@ -418,13 +418,13 @@ func triggerBuyCheck(model models.Strategy, date string, stats []models.Statisti
 			tradeFee.Volume,
 		)
 		if err != nil || orderID < 0 {
-			target.Status |= StrategyOrderFailed
+			target.Status |= storages.StrategyOrderFailed
 			log.Errorf("%s[%d]: 标的%s下单失败：%v", model.Name(), model.Code(), securityCode, err)
 			continue
 		}
 
 		// 下单成功：更新状态和订单ID
-		target.Status |= StrategyOrderSucceeded | StrategyOrderPlaced
+		target.Status |= storages.StrategyOrderSucceeded | storages.StrategyOrderPlaced
 		target.OrderId = orderID
 		completedCount++
 		log.Infof("%s[%d]: 标的%s下单成功，订单ID：%d", model.Name(), model.Code(), securityCode, orderID)

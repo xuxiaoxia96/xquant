@@ -3,10 +3,11 @@ package handler
 import (
 	"context"
 	"net/http"
-	"xquant/pkg/log"
-	"xquant/pkg/openapi_error"
 
 	"github.com/cloudwego/hertz/pkg/app"
+
+	"xquant/pkg/log"
+	"xquant/pkg/openapi_error"
 )
 
 func OpenAPISuccess(ctx context.Context, c *app.RequestContext, result interface{}) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gitee.com/quant1x/engine/config"
+	"xquant/pkg/config"
 )
 
 func TestConfig(t *testing.T) {

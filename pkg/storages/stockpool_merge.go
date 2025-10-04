@@ -27,7 +27,7 @@ func GetStockPoolFilename() string {
 
 // 从本地缓存加载股票池
 func GetStockPoolFromCache() (list []StockPool) {
-	filename := getStockPoolFilename()
+	filename := GetStockPoolFilename()
 	err := api.CsvToSlices(filename, &list)
 	_ = err
 	return
@@ -35,7 +35,7 @@ func GetStockPoolFromCache() (list []StockPool) {
 
 // 刷新本地股票池缓存
 func SaveStockPoolToCache(list []StockPool) {
-	filename := getStockPoolFilename()
+	filename := GetStockPoolFilename()
 	// 强制刷新股票池
 	err := api.SlicesToCsv(filename, list, true)
 	_ = err
@@ -46,7 +46,7 @@ func SaveStockPoolToCache(list []StockPool) {
 func StockPoolMerge(model models.Strategy, date string, orders []models.Statistics, maximumNumberOfAvailablePurchases int) {
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
-	localStockPool := getStockPoolFromCache()
+	localStockPool := GetStockPoolFromCache()
 	cacheStatistics := map[string]*StockPool{}
 	tradeDate := exchange.FixTradeDate(date)
 	for i, v := range orders {
@@ -104,8 +104,8 @@ func StockPoolMerge(model models.Strategy, date string, orders []models.Statisti
 	if len(newList) > 0 {
 		localStockPool = append(localStockPool, newList...)
 		logger.Infof("检查是否需要委托下单...")
-		checkOrderForBuy(localStockPool, model, date)
+		CheckOrderForBuy(localStockPool, model, date)
 		logger.Infof("检查是否需要委托下单...OK")
-		saveStockPoolToCache(localStockPool)
+		SaveStockPoolToCache(localStockPool)
 	}
 }

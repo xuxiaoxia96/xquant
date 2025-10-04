@@ -29,7 +29,7 @@ func getStockPoolFilename() string {
 }
 
 // 从本地缓存加载股票池
-func getStockPoolFromCache() (list []StockPool) {
+func getStockPoolFromCache() (list []storages.StockPool) {
 	filename := getStockPoolFilename()
 	err := api.CsvToSlices(filename, &list)
 	_ = err
@@ -37,7 +37,7 @@ func getStockPoolFromCache() (list []StockPool) {
 }
 
 // 刷新本地股票池缓存
-func saveStockPoolToCache(list []StockPool) error {
+func saveStockPoolToCache(list []storages.StockPool) error {
 	filename := getStockPoolFilename()
 	// 强制刷新股票池
 	err := api.SlicesToCsv(filename, list, true)
@@ -51,11 +51,11 @@ func stockPoolMerge(model models.Strategy, date string, orders []models.Statisti
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
 	localStockPool := storages.GetStockPoolFromCache()
-	cacheStatistics := map[string]*StockPool{}
+	cacheStatistics := map[string]*storages.StockPool{}
 	tradeDate := exchange.FixTradeDate(date)
 	for i, v := range orders {
-		sp := StockPool{
-			Status:       StrategyHit,
+		sp := storages.StockPool{
+			Status:       storages.StrategyHit,
 			Date:         v.Date,
 			Code:         v.Code,
 			Name:         v.Name,
@@ -87,17 +87,17 @@ func stockPoolMerge(model models.Strategy, date string, orders []models.Statisti
 		if found {
 			// 相同日期, 策略和证券代码, 视为重复
 			// 找到了, 标记为已存在
-			v.Status = StrategyAlreadyExists
+			v.Status = storages.StrategyAlreadyExists
 			//local.OrderStatus = v.OrderStatus
 			continue
 		}
 		// 没找到, 做召回处理
-		local.Status.Set(StrategyCancel, true)
+		local.Status.Set(storages.StrategyCancel, true)
 		local.UpdateTime = updateTime
 	}
-	var newList []StockPool
+	var newList []storages.StockPool
 	for _, v := range cacheStatistics {
-		if v.Status == StrategyAlreadyExists {
+		if v.Status == storages.StrategyAlreadyExists {
 			continue
 		}
 		v.UpdateTime = updateTime

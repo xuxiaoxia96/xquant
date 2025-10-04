@@ -8,7 +8,7 @@ import (
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
 	"xquant/pkg/cache"
-	"xquant/pkg/datasource/dfcf"
+	"xquant/pkg/datasource/easy_money"
 )
 
 // DataPreviewReport 业绩预告(Listed Companies'Performance Forecast)
@@ -43,11 +43,11 @@ func (this *DataPreviewReport) Init(ctx context.Context, date string) error {
 	modName := "业绩预告"
 	logger.Info(modName + ", 任务开始启动...")
 
-	var allReports []dfcf.PreviewQuarterlyReport
+	var allReports []easy_money.PreviewQuarterlyReport
 	// 确定更新日期
 	qBegin, _ := api.GetQuarterDayByDate(date, 0)
 	quarterBeginDate := exchange.FixTradeDate(qBegin)
-	list, pages, _, _ := dfcf.FinanceReports(quarterBeginDate, 1)
+	list, pages, _, _ := easy_money.FinanceReports(quarterBeginDate, 1)
 	if pages < 1 || len(list) == 0 {
 		return nil
 	}
@@ -56,7 +56,7 @@ func (this *DataPreviewReport) Init(ctx context.Context, date string) error {
 	barSub := progressbar.NewBar(barIndex, "评估["+modName+"]", pages)
 	for pageNo := 2; pageNo < pages+1; pageNo++ {
 		barSub.Add(1)
-		list, pages, count, err := dfcf.FinanceReports(quarterBeginDate, pageNo)
+		list, pages, count, err := easy_money.FinanceReports(quarterBeginDate, pageNo)
 		if err != nil || pages < 1 {
 			logger.Error(err)
 			break
@@ -65,7 +65,7 @@ func (this *DataPreviewReport) Init(ctx context.Context, date string) error {
 			break
 		}
 		allReports = append(allReports, list...)
-		if count < dfcf.EastmoneyFinanceReportsPageSize {
+		if count < easy_money.EastmoneyFinanceReportsPageSize {
 			break
 		}
 	}

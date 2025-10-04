@@ -6,7 +6,7 @@ import (
 	"gitee.com/quant1x/gox/logger"
 	"strings"
 	"time"
-	"xquant/pkg/datasource/dfcf"
+	"xquant/pkg/datasource/easy_money"
 )
 
 type companyNotice struct {
@@ -25,14 +25,14 @@ func getOneNotice(securityCode, currentDate string) (notice companyNotice) {
 	now = now.AddDate(0, -1, 0)
 	beginDate := now.Format(time.DateOnly)
 	endDate := currentDate
-	//list, pages, err := dfcf.StockNotices(securityCode, beginDate, endDate, 1)
+	//list, pages, err := easy_money.StockNotices(securityCode, beginDate, endDate, 1)
 	//if pages < 1 {
 	//	return
 	//}
 	pagesCount := 1
-	var tmpNotice *dfcf.NoticeDetail = nil
+	var tmpNotice *easy_money.NoticeDetail = nil
 	for pageNo := 1; pageNo < pagesCount+1; pageNo++ {
-		list, pages, err := dfcf.StockNotices(securityCode, beginDate, endDate, pageNo)
+		list, pages, err := easy_money.StockNotices(securityCode, beginDate, endDate, pageNo)
 		if err != nil || pages < 1 {
 			logger.Errorf("notice: code=%s, %s=>%s, %s", securityCode, beginDate, endDate, err)
 			break
@@ -74,7 +74,7 @@ func getOneNotice(securityCode, currentDate string) (notice companyNotice) {
 				tmpNotice = &v
 			}
 		}
-		if count < dfcf.EastmoneyNoticesPageSize {
+		if count < easy_money.EastmoneyNoticesPageSize {
 			break
 		}
 	}

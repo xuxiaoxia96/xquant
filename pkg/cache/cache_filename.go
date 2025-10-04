@@ -26,6 +26,14 @@ func KLineFilename(code string) string {
 	return filepath
 }
 
+// KLineFilenameEx K线缓存路径
+func KLineFilenameEx(code string, freq string) string {
+	cacheId := CacheId(code)
+	length := len(cacheId)
+	filename := fmt.Sprintf("%s/%s/%s.csv", GetKLinePath(freq), cacheId[:length-3], cacheId)
+	return filename
+}
+
 // WideFilename 宽表据缓存路径
 func WideFilename(code string) string {
 	cacheId := CacheId(code)
