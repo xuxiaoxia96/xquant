@@ -8,7 +8,6 @@ import (
 
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
@@ -54,10 +53,7 @@ func AllScan(barIndex *int, model models.Strategy) {
 	}
 	// 全市场扫描
 	tradeRule := config.GetStrategyParameterByCode(model.Code())
-	if tradeRule == nil {
-		logger.Errorf("strategy[%d]: trade rule not found", model.Code())
-		return
-	}
+
 	var stockCodes []string
 	needFilter := false
 	// 检查板块扫描的结果是否存在股票列表

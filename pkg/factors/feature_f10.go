@@ -9,7 +9,7 @@ import (
 	"gitee.com/quant1x/num"
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
-	"xquant/pkg/datasource/easy_money"
+	"xquant/pkg/datasource/east_money"
 	"xquant/pkg/datasource/tdxweb"
 	"xquant/pkg/market"
 )
@@ -128,7 +128,7 @@ func (this *F10) Update(code, cacheDate, featureDate string, complete bool) {
 	this.SafetyScore = safetyScore
 
 	// 6. 年报季报披露日期
-	annualReportDate, quarterlyReportDate := easy_money.NoticeDateForReport(securityCode, cacheDate)
+	annualReportDate, quarterlyReportDate := east_money.NoticeDateForReport(securityCode, cacheDate)
 	this.AnnualReportDate = annualReportDate
 	this.QuarterlyReportDate = quarterlyReportDate
 
@@ -164,7 +164,7 @@ func (this *F10) Repair(code, cacheDate, featureDate string, complete bool) {
 	}
 
 	// 6. 年报季报披露日期
-	annualReportDate, quarterlyReportDate := easy_money.NoticeDateForReport(securityCode, cacheDate)
+	annualReportDate, quarterlyReportDate := east_money.NoticeDateForReport(securityCode, cacheDate)
 	this.AnnualReportDate = annualReportDate
 	this.QuarterlyReportDate = quarterlyReportDate
 

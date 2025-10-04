@@ -5,15 +5,15 @@ import (
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"xquant/pkg/cache"
-	"xquant/pkg/datasource/easy_money"
+	"xquant/pkg/datasource/east_money"
 )
 
 var (
-	__mapQuarterlyReports = map[string]easy_money.QuarterlyReport{}
+	__mapQuarterlyReports = map[string]east_money.QuarterlyReport{}
 )
 
 func loadQuarterlyReports(date string) {
-	var allReports []easy_money.QuarterlyReport
+	var allReports []east_money.QuarterlyReport
 	_, qEnd := api.GetQuarterDayByDate(date)
 	filename := cache.ReportsFilename(qEnd)
 	err := api.CsvToSlices(filename, &allReports)
@@ -41,7 +41,7 @@ type quarterlyReportSummary struct {
 	DeductBasicEPS     float64
 }
 
-func (q *quarterlyReportSummary) Assign(v easy_money.QuarterlyReport) {
+func (q *quarterlyReportSummary) Assign(v east_money.QuarterlyReport) {
 	q.BPS = v.BPS
 	q.BasicEPS = v.BasicEPS
 	q.TotalOperateIncome = v.TotalOperateIncome
@@ -59,7 +59,7 @@ func getQuarterlyReportSummary(securityCode, date string) quarterlyReportSummary
 		summary.Assign(v)
 		return summary
 	}
-	q := easy_money.GetCacheQuarterlyReportsBySecurityCode(securityCode, date)
+	q := east_money.GetCacheQuarterlyReportsBySecurityCode(securityCode, date)
 	if q != nil {
 		summary.Assign(*q)
 	}

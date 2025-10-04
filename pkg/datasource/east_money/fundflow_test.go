@@ -1,4 +1,4 @@
-package easy_money
+package east_money
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package easy_money
+package east_money
 
 // 原始的接口状态信息
 type eastMoneyStatus struct {

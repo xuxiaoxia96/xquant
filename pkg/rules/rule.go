@@ -9,6 +9,7 @@ import (
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/runtime"
 	bitmap "github.com/bits-and-blooms/bitset"
+
 	"xquant/pkg/config"
 	"xquant/pkg/factors"
 )

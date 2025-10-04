@@ -11,7 +11,7 @@ import (
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
 	"xquant/pkg/datasource/base"
-	"xquant/pkg/datasource/easy_money"
+	"xquant/pkg/datasource/east_money"
 	"xquant/pkg/market"
 	"xquant/pkg/utils"
 )
@@ -256,14 +256,14 @@ func miscFundFlow(info *Misc, securityCode string, cacheDate, featureDate string
 	}
 	beginDate := exchange.MARKET_CH_FIRST_LISTTIME
 	filename := cache.FundFlowFilename(securityCode)
-	cacheList := []easy_money.FundFlow{}
+	cacheList := []east_money.FundFlow{}
 	err := api.CsvToSlices(filename, &cacheList)
 	cacheLength := len(cacheList)
 	if err == nil && cacheLength > 0 {
 		beginDate = cacheList[cacheLength-1].Date
 		cacheList = cacheList[0 : cacheLength-1]
 	}
-	newList := easy_money.IndividualStocksFundFlow(securityCode, beginDate)
+	newList := east_money.IndividualStocksFundFlow(securityCode, beginDate)
 	if len(newList) == 0 {
 		return
 	}

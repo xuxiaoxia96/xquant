@@ -1,11 +1,11 @@
 package factors
 
 import (
-	"xquant/pkg/datasource/easy_money"
+	"xquant/pkg/datasource/east_money"
 )
 
 // ComputeFreeCapital 计算自由流通股本
-func ComputeFreeCapital(holderList []easy_money.CirculatingShareholder, capital float64) (top10Capital, freeCapital, capitalChanged, increaseRatio, reductionRatio float64) {
+func ComputeFreeCapital(holderList []east_money.CirculatingShareholder, capital float64) (top10Capital, freeCapital, capitalChanged, increaseRatio, reductionRatio float64) {
 	increase := 0
 	reduce := 0
 	for k, holder := range holderList {

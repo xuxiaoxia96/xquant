@@ -7,7 +7,7 @@ import (
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
 	"xquant/pkg/cache"
-	"xquant/pkg/datasource/easy_money"
+	"xquant/pkg/datasource/east_money"
 )
 
 // DataQuarterlyReport 季报
@@ -15,7 +15,7 @@ type DataQuarterlyReport struct {
 	cache.DataSummary
 	Date  string
 	Code  string
-	cache map[string]easy_money.QuarterlyReport
+	cache map[string]east_money.QuarterlyReport
 }
 
 func init() {
@@ -81,12 +81,12 @@ func (r *DataQuarterlyReport) Increase(snapshot quotes.Snapshot) {
 }
 
 // IntegrateQuarterlyReports 更新季报数据
-func IntegrateQuarterlyReports(barIndex int, date string) map[string]easy_money.QuarterlyReport {
+func IntegrateQuarterlyReports(barIndex int, date string) map[string]east_money.QuarterlyReport {
 	modName := "季报概要信息"
 	logger.Info(modName + ", 任务开始启动...")
 
-	allReports := []easy_money.QuarterlyReport{}
-	reports, pages, _ := easy_money.QuarterlyReports(date)
+	allReports := []east_money.QuarterlyReport{}
+	reports, pages, _ := east_money.QuarterlyReports(date)
 	if pages < 1 || len(reports) == 0 {
 		return nil
 	}
@@ -94,7 +94,7 @@ func IntegrateQuarterlyReports(barIndex int, date string) map[string]easy_money.
 	bar := progressbar.NewBar(barIndex, "执行["+modName+"]", pages-1)
 	for pageNo := 2; pageNo < pages+1; pageNo++ {
 		bar.Add(1)
-		list, pages, err := easy_money.QuarterlyReports(date, pageNo)
+		list, pages, err := east_money.QuarterlyReports(date, pageNo)
 		if err != nil || pages < 1 {
 			logger.Error(err)
 			break
@@ -104,11 +104,11 @@ func IntegrateQuarterlyReports(barIndex int, date string) map[string]easy_money.
 			break
 		}
 		allReports = append(allReports, list...)
-		if count < easy_money.EastmoneyQuarterlyReportAllPageSize {
+		if count < east_money.EastmoneyQuarterlyReportAllPageSize {
 			break
 		}
 	}
-	mapReports := map[string]easy_money.QuarterlyReport{}
+	mapReports := map[string]east_money.QuarterlyReport{}
 	if len(allReports) > 0 {
 		for _, v := range allReports {
 			mapReports[v.SecurityCode] = v

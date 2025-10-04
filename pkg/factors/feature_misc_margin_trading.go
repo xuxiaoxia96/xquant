@@ -6,12 +6,12 @@ import (
 	"gitee.com/quant1x/exchange"
 
 	"xquant/pkg/cache"
-	"xquant/pkg/datasource/easy_money"
+	"xquant/pkg/datasource/east_money"
 	"xquant/pkg/log"
 )
 
 var (
-	__mapMarginTradingTargets   = map[string]easy_money.SecurityMarginTrading{}
+	__mapMarginTradingTargets   = map[string]east_money.SecurityMarginTrading{}
 	__mutexMarginTradingTargets sync.RWMutex
 )
 
@@ -21,7 +21,7 @@ func MarginTradingTargetInit(date string) {
 	defer __mutexMarginTradingTargets.Unlock()
 	clear(__mapMarginTradingTargets)
 	_, featureDate := cache.CorrectDate(date)
-	list := easy_money.GetMarginTradingList(featureDate)
+	list := east_money.GetMarginTradingList(featureDate)
 	if len(list) == 0 {
 		log.Errorf("date = %s, 没有融资融券数据", date)
 		return
@@ -33,7 +33,7 @@ func MarginTradingTargetInit(date string) {
 }
 
 // GetMarginTradingTarget 获取两融数据
-func GetMarginTradingTarget(code string) (easy_money.SecurityMarginTrading, bool) {
+func GetMarginTradingTarget(code string) (east_money.SecurityMarginTrading, bool) {
 	__mutexMarginTradingTargets.RLock()
 	defer __mutexMarginTradingTargets.RUnlock()
 	securityCode := exchange.CorrectSecurityCode(code)
