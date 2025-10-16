@@ -1,11 +1,12 @@
 package market
 
 import (
+	"math"
+
 	"gitee.com/quant1x/exchange"
 	"gitee.com/quant1x/gotdx"
 	"gitee.com/quant1x/gotdx/quotes"
 	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/num"
 )
 
 const (
@@ -37,7 +38,7 @@ func IndexSentiment(codes ...string) (sentiment float64, consistent int) {
 	tdxApi := gotdx.GetTdxApi()
 	hq, err := tdxApi.GetSnapshot([]string{securityCode})
 	if err != nil && len(hq) != len(codes) {
-		logger.Errorf("获取即时行情数据失败", err)
+		logger.Errorf("获取即时行情数据失败 %s", err)
 		return
 	}
 
@@ -47,7 +48,7 @@ func IndexSentiment(codes ...string) (sentiment float64, consistent int) {
 // SecuritySentiment 计算证券情绪
 func SecuritySentiment[E ~int | ~int64 | ~float32 | ~float64](up, down E) (sentiment float64, consistent int) {
 	sentiment = 100 * float64(up) / float64(up+down)
-	if num.Float64IsNaN(sentiment) {
+	if math.IsNaN(sentiment) {
 		sentiment = 0
 		return
 	}

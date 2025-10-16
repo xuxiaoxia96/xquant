@@ -77,7 +77,7 @@ func AllScan(barIndex *int, model models.Strategy) {
 	if needFilter && tradeRule != nil {
 		stockCodes = tradeRule.Filter(stockCodes)
 	}
-	stockSnapshots := []factors.QuoteSnapshot{}
+	var stockSnapshots []factors.QuoteSnapshot
 	stockCount := len(stockCodes)
 	*barIndex++
 	bar := progressbar.NewBar(*barIndex, "执行[全市场扫描]", stockCount)
