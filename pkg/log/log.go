@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 
-	"xquant/pkg/config"
 	"xquant/pkg/utils"
 )
 
@@ -46,9 +45,9 @@ func preFormat(format string, v ...any) (string, []any) {
 
 // Debugf 输出调试级别日志
 func Debugf(format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelDebug {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelDebug {
+	//	return
+	//}
 
 	format, v = preFormat(format, v...)
 	hlog.Debugf(format, v...)
@@ -56,36 +55,36 @@ func Debugf(format string, v ...any) {
 
 // Infof 输出信息级别日志
 func Infof(format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelInfo {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelInfo {
+	//	return
+	//}
 	format, v = preFormat(format, v...)
 	hlog.Infof(format, v...)
 }
 
 // Errorf 输出错误级别日志
 func Errorf(format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelError {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelError {
+	//	return
+	//}
 	format, v = preFormat(format, v...)
 	hlog.Errorf(format, v...)
 }
 
 // Warnf 输出警告级别日志
 func Warnf(format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelWarn {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelWarn {
+	//	return
+	//}
 	format, v = preFormat(format, v...)
 	hlog.Warnf(format, v...)
 }
 
 // CtxDebugf 输出带上下文的调试级别日志
 func CtxDebugf(ctx context.Context, format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelDebug {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelDebug {
+	//	return
+	//}
 
 	format, v = preFormat(format, v...)
 	hlog.CtxDebugf(ctx, format, v...)
@@ -93,27 +92,27 @@ func CtxDebugf(ctx context.Context, format string, v ...any) {
 
 // CtxInfof 输出带上下文的信息级别日志
 func CtxInfof(ctx context.Context, format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelInfo {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelInfo {
+	//	return
+	//}
 	format, v = preFormat(format, v...)
 	hlog.CtxInfof(ctx, format, v...)
 }
 
 // CtxErrorf 输出带上下文的错误级别日志
 func CtxErrorf(ctx context.Context, format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelError {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelError {
+	//	return
+	//}
 	format, v = preFormat(format, v...)
 	hlog.CtxErrorf(ctx, format, v...)
 }
 
 // CtxWarnf 输出带上下文的警告级别日志
 func CtxWarnf(ctx context.Context, format string, v ...any) {
-	if config.CurrentLogLevel > hlog.LevelWarn {
-		return
-	}
+	//if config.CurrentLogLevel > hlog.LevelWarn {
+	//	return
+	//}
 	format, v = preFormat(format, v...)
 	hlog.CtxWarnf(ctx, format, v...)
 }
