@@ -5,10 +5,12 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"xquant/cmd"
 )
 
 func main() {
-	rootCmd.AddCommand()
+	rootCmd := cmd.GlobalFlags()
 	if err := rootCmd.Execute(); err != nil {
 		_, err := fmt.Fprintf(os.Stderr, "root cmd execute error:%v", err)
 		if err != nil {

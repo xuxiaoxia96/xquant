@@ -32,6 +32,7 @@ func RunUpdate(ctx context.Context, params UpdateParams) error {
 		log.CtxErrorf(ctx, "[RunUpdate] %v", err) // 假设项目有日志包，ctx 用于日志关联
 		return err
 	}
+	
 	cacheDate, featureDate := cache.CorrectDate(currentDate)
 	log.CtxInfof(ctx, "[RunUpdate] 开始更新，日期：cache=%s, feature=%s", cacheDate, featureDate)
 

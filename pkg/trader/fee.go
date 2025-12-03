@@ -2,8 +2,9 @@ package trader
 
 import (
 	"fmt"
-	"gitee.com/quant1x/num"
 	"math"
+
+	"gitee.com/quant1x/num"
 	"xquant/pkg/config"
 )
 
@@ -95,36 +96,36 @@ func CalculateSellPriceLimit(price float64) float64 {
 //	@param price 价格
 //	@param volume 数量
 //	@param align 费用是否对齐, 即四舍五入. direction=SELL的时候, align必须是true
-func calculate_transaction_fee(direction Direction, price float64, volume int, align bool) (TotalFee, StampDutyFee, TransferFee, CommissionFee, MarketValue float64) {
+func calculateTransactionFee(direction Direction, price float64, volume int, align bool) (TotalFee, StampDutyFee, TransferFee, CommissionFee, MarketValue float64) {
 	if volume < 1 {
 		return InvalidFee, 0, 0, 0, 0
 	}
 	vol := float64(volume)
 	amount := vol * price
 	// 1. 印花税, 按照成交金额计算, 买入没有, 卖出, 0.1%
-	_stamp_duty_fee := amount
+	stampDutyFee := amount
 	if direction == BUY {
-		_stamp_duty_fee *= traderParameter.StampDutyRateForBuy
+		stampDutyFee *= traderParameter.StampDutyRateForBuy
 	} else if direction == SELL {
-		_stamp_duty_fee *= traderParameter.StampDutyRateForSell
+		stampDutyFee *= traderParameter.StampDutyRateForSell
 	} else {
 		return InvalidFee, 0, 0, 0, 0
 	}
 	if align {
-		_stamp_duty_fee = num.Decimal(_stamp_duty_fee)
+		stampDutyFee = num.Decimal(stampDutyFee)
 	}
 	// 2. 过户费, 按照股票数量, 双向, 0.06%
-	_transfer_fee := vol * traderParameter.TransferRate
+	transferFee := vol * traderParameter.TransferRate
 	if align {
-		_transfer_fee = num.Decimal(_transfer_fee)
+		transferFee = num.Decimal(transferFee)
 	}
 	// 3. 券商佣金, 按照成交金额计算, 双向, 0.025%
-	_commission_fee := amount * traderParameter.CommissionRate
+	commissionFee := amount * traderParameter.CommissionRate
 	if align {
-		_commission_fee = num.Decimal(_commission_fee)
+		commissionFee = num.Decimal(commissionFee)
 	}
-	if align && _commission_fee < traderParameter.CommissionMin {
-		_commission_fee = traderParameter.CommissionMin
+	if align && commissionFee < traderParameter.CommissionMin {
+		commissionFee = traderParameter.CommissionMin
 	}
 	// 4. 股票市值
 	_marketValue := amount
@@ -132,17 +133,17 @@ func calculate_transaction_fee(direction Direction, price float64, volume int, a
 		_marketValue = num.Decimal(_marketValue)
 	}
 	// 5. 计算费用
-	_fee := _stamp_duty_fee + _transfer_fee + _commission_fee
+	_fee := stampDutyFee + transferFee + commissionFee
 	// 6. 计算总费用
-	_total_fee := _fee
+	totalFee := _fee
 	if direction == BUY {
 		// 买入操作, 加上股票市值
-		_total_fee += _marketValue
+		totalFee += _marketValue
 	} else {
 		// 卖出操作, 股票市值减去费用
 		_marketValue -= _fee
 	}
-	return _total_fee, _stamp_duty_fee, _transfer_fee, _commission_fee, _marketValue
+	return totalFee, stampDutyFee, transferFee, commissionFee, _marketValue
 }
 
 // EvaluateFeeForBuy 评估买入总费用
@@ -165,7 +166,7 @@ func EvaluateFeeForSell(securityCode string, price float64, volume int) *TradeFe
 		Volume:       volume,
 		Direction:    SELL,
 	}
-	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculate_transaction_fee(f.Direction, f.Price, f.Volume, true)
+	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculateTransactionFee(f.Direction, f.Price, f.Volume, true)
 	return &f
 }
 
@@ -179,7 +180,7 @@ func EvaluatePriceForSell(securityCode string, price float64, volume int, fixedY
 		Volume:       volume,
 		Direction:    SELL,
 	}
-	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculate_transaction_fee(f.Direction, f.Price, f.Volume, true)
+	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculateTransactionFee(f.Direction, f.Price, f.Volume, true)
 	if fixedYield > 0 {
 		fee := (f.TotalFee-f.TransferFee)*(1+fixedYield) + f.TransferFee
 		amount := float64(volume) * price
@@ -187,7 +188,7 @@ func EvaluatePriceForSell(securityCode string, price float64, volume int, fixedY
 		totalFee := fee + marketValue
 		fixedPrice := totalFee / float64(volume)
 		f.Price = num.Decimal(fixedPrice)
-		f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculate_transaction_fee(f.Direction, f.Price, f.Volume, true)
+		f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculateTransactionFee(f.Direction, f.Price, f.Volume, true)
 	}
 	return &f
 }
@@ -218,7 +219,7 @@ func (f *TradeFee) CalculateNumToBuy(fund, price float64) int {
 	f.Direction = BUY
 	f.Price = price
 	// 1. 计算每股费用
-	_fee, _, _, _, _ := calculate_transaction_fee(f.Direction, f.Price, UnknownVolume, false)
+	_fee, _, _, _, _ := calculateTransactionFee(f.Direction, f.Price, UnknownVolume, false)
 	if _fee == InvalidFee {
 		return InvalidVolume
 	}
@@ -229,14 +230,14 @@ func (f *TradeFee) CalculateNumToBuy(fund, price float64) int {
 	// 4. 转成整数
 	f.Volume = int(_vol) * 100
 	// 5. 重新计算
-	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculate_transaction_fee(f.Direction, f.Price, f.Volume, true)
+	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculateTransactionFee(f.Direction, f.Price, f.Volume, true)
 	if f.TotalFee == InvalidFee {
 		return InvalidVolume
 	} else if _fee > fund {
 		// 如果费用超了, 则减去1手(100股)
 		f.Volume -= 100
 		// 重新计算交易费用
-		f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculate_transaction_fee(f.Direction, f.Price, f.Volume, true)
+		f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculateTransactionFee(f.Direction, f.Price, f.Volume, true)
 	}
 	return f.Volume
 }
@@ -246,7 +247,7 @@ func (f *TradeFee) CalculateFundFromSell(price float64, volume int) float64 {
 	f.Direction = SELL
 	f.Price = price
 	f.Volume = volume
-	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculate_transaction_fee(f.Direction, f.Price, f.Volume, true)
+	f.TotalFee, f.StampDutyFee, f.TransferFee, f.CommissionFee, f.MarketValue = calculateTransactionFee(f.Direction, f.Price, f.Volume, true)
 	if f.TotalFee == InvalidFee {
 		return InvalidFee
 	}

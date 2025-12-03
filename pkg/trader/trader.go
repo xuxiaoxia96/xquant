@@ -3,13 +3,15 @@ package trader
 import (
 	"encoding/json"
 	"fmt"
-	"gitee.com/quant1x/exchange"
-	"gitee.com/quant1x/gox/http"
-	"gitee.com/quant1x/gox/logger"
 	urlpkg "net/url"
 	"path/filepath"
 	"strings"
+
+	"gitee.com/quant1x/exchange"
+	"gitee.com/quant1x/gox/logger"
+
 	"xquant/pkg/cache"
+	"xquant/pkg/client/http"
 	"xquant/pkg/config"
 	"xquant/pkg/models"
 )
@@ -117,7 +119,7 @@ func (d OrderDetail) SecurityCode() string {
 
 // QueryAccount 查询账户信息
 func QueryAccount() (*AccountDetail, error) {
-	data, err := http.Post(urlAccount, "")
+	data, err := http.PostString(urlAccount, "")
 	if err != nil {
 		logger.Errorf("trader: 查询账户异常: %+v", err)
 		return nil, err
@@ -133,7 +135,7 @@ func QueryAccount() (*AccountDetail, error) {
 
 // QueryHolding 查询持仓
 func QueryHolding() ([]PositionDetail, error) {
-	data, err := http.Post(urlHolding, "")
+	data, err := http.PostString(urlHolding, "")
 	if err != nil {
 		logger.Errorf("trader: 查询持仓异常: %+v", err)
 		return nil, err
@@ -149,7 +151,7 @@ func QueryHolding() ([]PositionDetail, error) {
 
 // QueryOrders 查询当日委托
 func QueryOrders() ([]OrderDetail, error) {
-	data, err := http.Post(urlOrders, "")
+	data, err := http.PostString(urlOrders, "")
 	if err != nil {
 		logger.Errorf("trader: 查询委托异常: %+v", err)
 		return nil, err
@@ -170,7 +172,7 @@ func CancelOrder(orderId int) error {
 	}
 	body := params.Encode()
 	logger.Infof("trader-cancel: %s", body)
-	data, err := http.Post(urlCancelOrder, body)
+	data, err := http.PostString(urlCancelOrder, body)
 	if err != nil {
 		logger.Errorf("trader-cancel: 撤单操作异常: %+v", err)
 		return err
@@ -206,7 +208,7 @@ func DirectOrder(direction Direction, strategyName, orderRemark, securityCode st
 	}
 	body := params.Encode()
 	logger.Infof("trader-order: %s", body)
-	data, err := http.Post(urlPlaceOrder, body)
+	data, err := http.PostString(urlPlaceOrder, body)
 	if err != nil {
 		logger.Errorf("trader-order: 下单操作异常: %+v", err)
 		return -1, err

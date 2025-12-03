@@ -6,11 +6,12 @@ import (
 	"slices"
 	"sync"
 
-	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/concurrent"
 	"xquant/pkg/cache"
 	"xquant/pkg/config"
 	"xquant/pkg/factors"
+
+	"gitee.com/quant1x/gox/api"
+	"gitee.com/quant1x/gox/concurrent"
 )
 
 // ModelKind 模型类型编码, 整型
@@ -169,5 +170,8 @@ var (
 	MapStrategies = map[ModelKind]StrategySummary{
 		ModelZero:    {Type: ModelZero, Name: "0号策略"},
 		ModelHousNo1: {Type: ModelHousNo1, Name: "1号策略"},
+		ModelNo2:     {Type: ModelNo2, Name: "MACD金叉策略"},
+		ModelNo3:     {Type: ModelNo3, Name: "均线多头排列策略"},
+		ModelNo4:     {Type: ModelNo4, Name: "突破策略"},
 	}
 )

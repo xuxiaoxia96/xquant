@@ -48,7 +48,8 @@ func UpdateApplicationVersion(v string) {
 
 // 初始化所有子命令
 func initSubCommands() {
-	InitUpdateCmd()
+	// 初始化命令（但不添加到根命令，在 GlobalFlags 中添加）
+	// InitUpdateCmd()
 	//InitServerCmd()
 
 	// 其他子命令可以在这里初始化
@@ -117,6 +118,7 @@ func GlobalFlags() *cli.Command {
 		cfg.CpuNum, "设置CPU最大核数")
 
 	// 添加子命令
+	rootCmd.AddCommand(InitUpdateCmd())
 	// rootCmd.AddCommand(cmdBackTest)
 
 	return rootCmd

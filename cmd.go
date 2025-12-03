@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	command "xquant/cmd"
+
 	"xquant/pkg/models"
 )
 

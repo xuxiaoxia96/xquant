@@ -6,8 +6,7 @@ import (
 	"os"
 
 	"github.com/cloudwego/hertz/pkg/common/hlog"
-
-	"xquant/pkg/utils"
+	"github.com/bytedance/sonic"
 )
 
 var enableIndentJsonLog = os.Getenv("MAAS_API_PROXY_ENABLE_INDENT_JSON_LOG") == "true"
@@ -35,9 +34,9 @@ func preFormat(format string, v ...any) (string, []any) {
 
 		// 根据配置决定是否缩进JSON输出
 		if enableIndentJsonLog {
-			v[cnt] = utils.MustMarshalIndent(v[cnt])
+			v[cnt] = MustMarshalIndent(v[cnt])
 		} else {
-			v[cnt] = utils.MustMarshal(v[cnt])
+			v[cnt] = MustMarshal(v[cnt])
 		}
 	}
 	return string(ss), v
@@ -115,4 +114,20 @@ func CtxWarnf(ctx context.Context, format string, v ...any) {
 	//}
 	format, v = preFormat(format, v...)
 	hlog.CtxWarnf(ctx, format, v...)
+}
+
+func MustMarshalIndent(d interface{}) string {
+	if d, err := sonic.ConfigDefault.MarshalIndent(d, "", "\t"); err != nil {
+		return ""
+	} else {
+		return string(d)
+	}
+}
+
+func MustMarshal(d interface{}) string {
+	if d, err := sonic.Marshal(d); err != nil {
+		return ""
+	} else {
+		return string(d)
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gitee.com/quant1x/exchange"
+	"gitee.com/quant1x/gox/concurrent"
 	"golang.org/x/exp/slices"
 
 	"xquant/pkg/config"
@@ -150,13 +151,24 @@ func snapshotTracker(model models.Strategy, tradeRule *config.StrategyParameter)
 		return
 	}
 
-	// 3. 过滤不符合条件的股票
+	// 3. 过滤不符合条件的股票（基于快照数据）
 	filteredSnapshots := filterStocks(model, tradeRule, stockSnapshots)
+	if len(filteredSnapshots) == 0 {
+		log.CtxDebugf(context.Background(), "[TrackerCore] Filter 后无有效股票，跳过快照跟踪")
+		return
+	}
 
-	// 4. 对股票进行排序
-	sortedSnapshots := sortStocks(model, filteredSnapshots)
+	// 4. Evaluate 评估（基于日线数据，深度筛选）
+	evaluatedSnapshots := evaluateStocks(model, filteredSnapshots)
+	if len(evaluatedSnapshots) == 0 {
+		log.CtxDebugf(context.Background(), "[TrackerCore] Evaluate 后无有效股票，跳过快照跟踪")
+		return
+	}
 
-	// 5. 最终结果处理（表格输出、股票池更新、交易检查）
+	// 5. 对股票进行排序
+	sortedSnapshots := sortStocks(model, evaluatedSnapshots)
+
+	// 6. 最终结果处理（表格输出、股票池更新、交易检查）
 	tracker.HandleTrackerResult(model, sortedSnapshots)
 }
 
@@ -195,6 +207,55 @@ func filterStocks(model models.Strategy, tradeRule *config.StrategyParameter, sn
 	return slices.DeleteFunc(snapshots, func(snapshot factors.QuoteSnapshot) bool {
 		return model.Filter(tradeRule.Rules, snapshot) != nil
 	})
+}
+
+// evaluateStocks 通过 Evaluate 方法评估股票（基于日线数据）
+// 输入：过滤后的快照列表
+// 输出：通过 Evaluate 评估的快照列表
+func evaluateStocks(model models.Strategy, snapshots []factors.QuoteSnapshot) []factors.QuoteSnapshot {
+	if len(snapshots) == 0 {
+		return nil
+	}
+
+	// 1. 提取股票代码
+	stockCodes := make([]string, 0, len(snapshots))
+	for _, snap := range snapshots {
+		stockCodes = append(stockCodes, snap.SecurityCode)
+	}
+
+	// 2. 创建结果映射（线程安全的 TreeMap）
+	mapStock := concurrent.NewTreeMap[string, models.ResultInfo]()
+
+	// 3. 并发执行 Evaluate（每个股票独立评估）
+	var wg sync.WaitGroup
+	for _, code := range stockCodes {
+		wg.Add(1)
+		go func(securityCode string) {
+			defer wg.Done()
+			// Evaluate 方法会分析日线数据，符合条件的会写入 mapStock
+			model.Evaluate(securityCode, mapStock)
+		}(code)
+	}
+	wg.Wait()
+
+	// 4. 提取通过评估的股票代码集合
+	evaluatedCodes := make(map[string]bool, mapStock.Size())
+	mapStock.Each(func(key string, value models.ResultInfo) {
+		evaluatedCodes[key] = true
+	})
+
+	// 5. 从原始快照中筛选出通过 Evaluate 的股票（保留完整快照数据）
+	var evaluatedSnapshots []factors.QuoteSnapshot
+	for _, snap := range snapshots {
+		if evaluatedCodes[snap.SecurityCode] {
+			evaluatedSnapshots = append(evaluatedSnapshots, snap)
+		}
+	}
+
+	log.CtxDebugf(context.Background(), "[TrackerCore] Evaluate 评估完成: 输入=%d, 通过=%d",
+		len(snapshots), len(evaluatedSnapshots))
+
+	return evaluatedSnapshots
 }
 
 // sortStocks 按策略规则排序股票（无策略排序时用默认规则）

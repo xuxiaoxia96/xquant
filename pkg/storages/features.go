@@ -2,6 +2,10 @@ package storages
 
 import (
 	"context"
+	"os"
+	"sync"
+	"time"
+
 	"gitee.com/quant1x/gox/coroutine"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
@@ -10,9 +14,7 @@ import (
 	"gitee.com/quant1x/gox/text/runewidth"
 	"gitee.com/quant1x/gox/util/treemap"
 	"gitee.com/quant1x/pkg/tablewriter"
-	"os"
-	"sync"
-	"time"
+	
 	"xquant/pkg/cache"
 	"xquant/pkg/factors"
 	"xquant/pkg/market"
