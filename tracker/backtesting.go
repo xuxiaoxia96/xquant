@@ -5,19 +5,21 @@ import (
 	"os"
 	"sort"
 
-	"gitee.com/quant1x/data/exchange"
 	"xquant/cache"
 	"xquant/config"
 	"xquant/factors"
 	"xquant/market"
 	"xquant/models"
 	"xquant/storages"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pandas"
-	"gitee.com/quant1x/pkg/tablewriter"
+	"github.com/olekukonko/tablewriter"
+
+	"xquant/pkg/progressbar"
 )
 
 // GoodCase good case
@@ -295,7 +297,7 @@ func BackTesting(strategyNo uint64, countDays, countTopN int) {
 		}
 
 		tbl := tablewriter.NewWriter(os.Stdout)
-		tbl.SetHeader(tags.GetHeadersByTags(models.Statistics{}))
+		tbl.Header(toInterfaceSlice(tags.GetHeadersByTags(models.Statistics{}))...)
 		samples = samples[:topN]
 		var results []models.Statistics
 		for _, v := range samples {
@@ -350,7 +352,7 @@ func BackTesting(strategyNo uint64, countDays, countTopN int) {
 				gtP5 += 1
 			}
 			yields += rate
-			tbl.Append(tags.GetValuesByTags(v))
+			tbl.Append(toInterfaceSlice(tags.GetValuesByTags(v))...)
 		}
 		yields /= float64(len(results))
 		fmt.Println() // 输出一个换行

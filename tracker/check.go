@@ -5,12 +5,13 @@ import (
 	"slices"
 	"strings"
 
-	"gitee.com/quant1x/data/exchange"
-	"gitee.com/quant1x/data/level1/securities"
 	"xquant/cache"
 	"xquant/config"
 	"xquant/factors"
 	"xquant/models"
+
+	"gitee.com/quant1x/data/exchange"
+	"gitee.com/quant1x/data/level1/securities"
 	"gitee.com/quant1x/gox/api"
 )
 

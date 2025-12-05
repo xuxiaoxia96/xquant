@@ -3,12 +3,14 @@ package tracker
 import (
 	"fmt"
 
-	"gitee.com/quant1x/data/level1/securities"
 	"xquant/factors"
 	"xquant/models"
+
+	"gitee.com/quant1x/data/level1/securities"
 	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/num"
+
+	"xquant/pkg/progressbar"
 )
 
 // 板块扫描

@@ -1,28 +1,23 @@
 package tracker
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"sort"
 	"time"
 
-	"fmt"
-	"os"
-
-	"xquant/factors"
-	"xquant/models"
-	"xquant/storages"
-
 	"gitee.com/quant1x/data/exchange"
-	"gitee.com/quant1x/gox/tags"
+	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/num"
-	"gitee.com/quant1x/pkg/tablewriter"
+	"github.com/olekukonko/tablewriter"
 
 	"xquant/config"
+	"xquant/factors"
+	"xquant/models"
 	"xquant/permissions"
-
-	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/gox/progressbar"
-	"gitee.com/quant1x/gox/runtime"
+	"xquant/pkg/progressbar"
+	"xquant/storages"
 )
 
 // Tracker 盘中跟踪
@@ -30,7 +25,9 @@ func Tracker(strategyNumbers ...uint64) {
 	for {
 		updateInRealTime, status := exchange.CanUpdateInRealtime()
 		isTrading := updateInRealTime && (status == exchange.ExchangeTrading || status == exchange.ExchangeSuspend)
-		if !runtime.Debug() && !isTrading {
+		// 检查调试模式（通过环境变量或配置）
+		isDebug := os.Getenv("XQUANT_DEBUG") == "true" || config.GlobalConfig.Runtime.Debug
+		if !isDebug && !isTrading {
 			// 非调试且非交易时段返回
 			return
 		}
@@ -48,17 +45,19 @@ func Tracker(strategyNumbers ...uint64) {
 			}
 			err = permissions.CheckPermission(model)
 			if err != nil {
-				logger.Error(err)
+				log.Printf("[Tracker] 权限检查失败: %v", err)
 				continue
 			}
 			strategyParameter := config.GetStrategyParameterByCode(strategyNumber)
 			if strategyParameter == nil {
 				continue
 			}
+			// 检查调试模式
+			isDebug := os.Getenv("XQUANT_DEBUG") == "true" || config.GlobalConfig.Runtime.Debug
 			if strategyParameter.Session.IsTrading() {
 				snapshotTracker(&barIndex, model, strategyParameter)
 			} else {
-				if runtime.Debug() {
+				if isDebug {
 					snapshotTracker(&barIndex, model, strategyParameter)
 				} else {
 					break
@@ -249,14 +248,16 @@ func fillBlockInfo(ticket *models.Statistics) {
 func renderTableAndWinRate(statistics []models.Statistics, currentlyDay, updateTime string) {
 	// 渲染表格
 	tbl := tablewriter.NewWriter(os.Stdout)
-	tbl.SetHeader(tags.GetHeadersByTags(models.Statistics{}))
+	headers := getHeadersByTags(models.Statistics{})
+	tbl.Header(toInterfaceSlice(headers)...)
 
 	// 计算胜率统计
 	winRateStats := calculateWinRateStatistics(statistics)
 
 	// 填充表格数据
 	for _, v := range statistics {
-		tbl.Append(tags.GetValuesByTags(v))
+		values := getValuesByTags(v)
+		tbl.Append(toInterfaceSlice(values)...)
 	}
 
 	// 输出表格

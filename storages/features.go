@@ -9,9 +9,9 @@ import (
 	"xquant/cache"
 	"xquant/factors"
 	"xquant/market"
+	"xquant/pkg/progressbar"
 	"gitee.com/quant1x/gox/coroutine"
 	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/runtime"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/gox/text/runewidth"
@@ -22,7 +22,7 @@ import (
 // MetricCallback 性能指标回调函数
 type MetricCallback func()
 
-func updateStockFeature(wg *coroutine.RollingWaitGroup, bar *progressbar.Bar, feature factors.Feature, code string, cacheDate, featureDate string, op cache.OpKind, p *treemap.Map, sb *cache.ScoreBoard, now time.Time) {
+func updateStockFeature(wg *coroutine.RollingWaitGroup, bar progressbar.Bar, feature factors.Feature, code string, cacheDate, featureDate string, op cache.OpKind, p *treemap.Map, sb *cache.ScoreBoard, now time.Time) {
 	defer runtime.CatchPanic("code[%s]: cacheDate=%s,featureDate=%s", code, cacheDate, featureDate)
 	defer sb.Add(1, time.Since(now), false, false)
 	if op == cache.OpRepair {

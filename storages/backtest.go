@@ -8,8 +8,9 @@ import (
 	"xquant/factors"
 	"xquant/market"
 	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/pkg/runewidth"
+
+	"xquant/pkg/progressbar"
 )
 
 // FeaturesBackTest FeaturesUpdate 特征-数据有效性验证

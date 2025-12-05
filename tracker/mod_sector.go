@@ -8,20 +8,22 @@ import (
 	"sync"
 	"time"
 
-	"gitee.com/quant1x/data/exchange"
 	"xquant/cache"
 	"xquant/config"
 	"xquant/factors"
 	"xquant/market"
 	"xquant/models"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/concurrent"
 	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pandas"
-	"gitee.com/quant1x/pkg/tablewriter"
+	"github.com/olekukonko/tablewriter"
+
+	"xquant/pkg/progressbar"
 )
 
 // ScanAllSectors 扫描板块
@@ -158,7 +160,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	topBlocks := lastBlocks[:bn]
 	blkTable := tablewriter.NewWriter(os.Stdout)
 	blkHeaders := tags.GetHeadersByTags(SectorInfo{})
-	blkTable.SetHeader(blkHeaders)
+	blkTable.Header(toInterfaceSlice(blkHeaders)...)
 	blkValues := [][]string{}
 	for _, block := range topBlocks {
 		values := tags.GetValuesByTags(block)
@@ -168,7 +170,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 			__allStocks = append(__allStocks, block.StockCodes...)
 		}
 	}
-	blkTable.AppendBulk(blkValues)
+	blkTable.Bulk(blkValues)
 	fmt.Println()
 	blkTable.Render()
 
@@ -203,7 +205,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	wg.Wait()
 	fmt.Println()
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(tags.GetHeadersByTags(models.ResultInfo{}))
+	table.Header(toInterfaceSlice(tags.GetHeadersByTags(models.ResultInfo{}))...)
 	elapsedTime := time.Since(mainStart) / time.Millisecond
 	goals := mapStock.Size()
 	message := fmt.Sprintf("\n总耗时: %.3fs, 总记录: %d, 命中: %d, 平均: %.3f/s\n", float64(elapsedTime)/1000, count, goals, float64(count)/(float64(elapsedTime)/1000))
@@ -241,7 +243,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 			wg.Add(1)
 			info.Predict()
 			*rs = append(*rs, info)
-			tbl.Append(tags.GetValuesByTags(info))
+			tbl.Append(toInterfaceSlice(tags.GetValuesByTags(info))...)
 		}
 		predict(row, &rs, table)
 	})

@@ -16,10 +16,11 @@ import (
 	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
-	"gitee.com/quant1x/pkg/tablewriter"
+	"github.com/olekukonko/tablewriter"
+
+	"xquant/pkg/progressbar"
 )
 
 var (
@@ -141,7 +142,7 @@ func AllScan(barIndex *int, model models.Strategy) {
 
 	// 输出二维表格
 	tbl := tablewriter.NewWriter(os.Stdout)
-	tbl.SetHeader(tags.GetHeadersByTags(models.Statistics{}))
+	tbl.Header(toInterfaceSlice(tags.GetHeadersByTags(models.Statistics{}))...)
 	topN := models.CountTopN
 	if topN <= 0 {
 		topN = tradeRule.Total
@@ -230,7 +231,7 @@ func AllScan(barIndex *int, model models.Strategy) {
 			gtP5 += 1
 		}
 		yields += rate
-		tbl.Append(tags.GetValuesByTags(v))
+		tbl.Append(toInterfaceSlice(tags.GetValuesByTags(v))...)
 	}
 	yields /= float64(len(votingResults))
 	fmt.Println() // 输出一个换行

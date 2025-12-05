@@ -6,16 +6,18 @@ import (
 	"slices"
 	"sort"
 
-	"gitee.com/quant1x/data/exchange"
-	"gitee.com/quant1x/data/level1/securities"
 	"xquant/factors"
 	"xquant/market"
 	"xquant/models"
+
+	"gitee.com/quant1x/data/exchange"
+	"gitee.com/quant1x/data/level1/securities"
 	"gitee.com/quant1x/gox/api"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
-	"gitee.com/quant1x/pkg/tablewriter"
+	"github.com/olekukonko/tablewriter"
+
+	"xquant/pkg/progressbar"
 )
 
 // ScanSectorForTick 扫描板块
@@ -138,7 +140,7 @@ func ScanSectorForTick(barIndex *int) []string {
 	topBlocks := lastBlocks[:bn]
 	blkTable := tablewriter.NewWriter(os.Stdout)
 	blkHeaders := tags.GetHeadersByTags(SectorInfo{})
-	blkTable.SetHeader(blkHeaders)
+	blkTable.Header(toInterfaceSlice(blkHeaders)...)
 	var blkValues [][]string
 	var targets []string
 	for _, block := range topBlocks {
@@ -149,7 +151,7 @@ func ScanSectorForTick(barIndex *int) []string {
 		targets = append(targets, block.StockCodes...)
 		//}
 	}
-	blkTable.AppendBulk(blkValues)
+	blkTable.Bulk(blkValues)
 	fmt.Println()
 	blkTable.Render()
 	targets = api.Unique(targets)

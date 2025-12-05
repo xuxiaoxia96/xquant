@@ -8,9 +8,9 @@ import (
 	"xquant/cache"
 	"xquant/factors"
 	"xquant/market"
+	"xquant/pkg/progressbar"
 	"gitee.com/quant1x/gox/coroutine"
 	"gitee.com/quant1x/gox/logger"
-	"gitee.com/quant1x/gox/progressbar"
 	"gitee.com/quant1x/gox/runtime"
 	"gitee.com/quant1x/gox/text/runewidth"
 )
@@ -25,7 +25,7 @@ func syncDataSetByDate(data factors.DataSet, date string, op cache.OpKind) {
 }
 
 // 更新单个数据集
-func updateOneDataSet(wg *sync.WaitGroup, parent, bar *progressbar.Bar, dataSet factors.DataSet, date string, op cache.OpKind, allCodes []string) {
+func updateOneDataSet(wg *sync.WaitGroup, parent, bar progressbar.Bar, dataSet factors.DataSet, date string, op cache.OpKind, allCodes []string) {
 	moduleName := "基础数据"
 	if op == cache.OpRepair {
 		moduleName = "修复" + moduleName
