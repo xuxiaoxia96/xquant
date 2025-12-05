@@ -6,13 +6,14 @@ import (
 	"sort"
 	"time"
 
-	"gitee.com/quant1x/data/exchange"
 	"xquant/cache"
 	"xquant/config"
 	"xquant/factors"
 	"xquant/market"
 	"xquant/models"
 	"xquant/storages"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
@@ -244,6 +245,6 @@ func AllScan(barIndex *int, model models.Strategy) {
 	fmt.Printf("\t==> 溢价超3%%: %d/%d, %.2f%%\n", gtP4, count, 100*float64(gtP4)/float64(count))
 	fmt.Printf("\t==> 溢价超5%%: %d/%d, %.2f%%\n", gtP5, count, 100*float64(gtP5)/float64(count))
 	fmt.Println()
-	// 存储
-	storages.OutputStatistics(model, currentlyDay, votingResults)
+	// 更新股票池并执行交易
+	storages.UpdateStockPoolAndExecuteTrading(model, currentlyDay, votingResults)
 }

@@ -7,16 +7,18 @@ import (
 	"fmt"
 	"os"
 
-	"gitee.com/quant1x/data/exchange"
 	"xquant/factors"
 	"xquant/models"
 	"xquant/storages"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/tags"
 	"gitee.com/quant1x/num"
 	"gitee.com/quant1x/pkg/tablewriter"
-	
+
 	"xquant/config"
 	"xquant/permissions"
+
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/progressbar"
@@ -112,19 +114,35 @@ func snapshotTracker(barIndex *int, model models.Strategy, tradeRule *config.Str
 			return a.OpenTurnZ == b.OpenTurnZ && a.OpeningChangeRate > b.OpeningChangeRate
 		})
 	}
-	// 输出表格
-	OutputTable(model, stockSnapshots)
+	// 处理策略扫描结果：构建统计、渲染表格、更新股票池并执行交易
+	ProcessStrategyResults(model, stockSnapshots)
 }
 
-func OutputTable(model models.Strategy, stockSnapshots []factors.QuoteSnapshot) {
+// ProcessStrategyResults 处理策略扫描结果
+// 包括：构建统计数据、渲染表格、计算胜率、更新股票池并执行交易
+func ProcessStrategyResults(model models.Strategy, stockSnapshots []factors.QuoteSnapshot) {
+	// 1. 获取当前交易日期和时间
+	currentlyDay, updateTime := getCurrentTradeDateAndTime()
+
+	// 2. 构建统计数据
+	statistics := buildStatisticsFromSnapshots(stockSnapshots, currentlyDay)
+
+	// 3. 渲染表格并计算胜率
+	renderTableAndWinRate(statistics, currentlyDay, updateTime)
+
+	// 4. 更新股票池并执行交易（如果配置了交易）
+	storages.UpdateStockPoolAndExecuteTrading(model, currentlyDay, statistics)
+}
+
+// getCurrentTradeDateAndTime 获取当前交易日期和时间
+func getCurrentTradeDateAndTime() (string, string) {
 	today := exchange.IndexToday()
 	dates := exchange.TradeRange(exchange.MARKET_CN_FIRST_DATE, today)
 	days := len(dates)
 	currentlyDay := dates[days-1]
 	updateTime := "15:00:59"
-	//todayIsTradeDay := false
+
 	if today == currentlyDay {
-		//todayIsTradeDay = true
 		now := time.Now()
 		nowTime := now.Format(exchange.CN_SERVERTIME_FORMAT)
 		if nowTime < exchange.CN_TradingStartTime {
@@ -133,16 +151,14 @@ func OutputTable(model models.Strategy, stockSnapshots []factors.QuoteSnapshot) 
 			updateTime = now.Format(exchange.TimeOnly)
 		}
 	}
-	// 控制台输出表格
-	tbl := tablewriter.NewWriter(os.Stdout)
-	tbl.SetHeader(tags.GetHeadersByTags(models.Statistics{}))
-	orderCount := models.CountTopN
-	if orderCount > len(stockSnapshots) {
-		orderCount = len(stockSnapshots)
-	}
-	votingResults := []models.Statistics{}
-	//stockSnapshots = stockSnapshots[:orderCount]
+	return currentlyDay, updateTime
+}
+
+// buildStatisticsFromSnapshots 从快照数据构建统计数据
+func buildStatisticsFromSnapshots(stockSnapshots []factors.QuoteSnapshot, currentlyDay string) []models.Statistics {
+	votingResults := make([]models.Statistics, 0, len(stockSnapshots))
 	orderCreateTime := factors.GetTimestamp()
+
 	for _, v := range stockSnapshots {
 		ticket := models.Statistics{
 			Date:                 currentlyDay,              // 日期
@@ -164,78 +180,144 @@ func OutputTable(model models.Strategy, stockSnapshots []factors.QuoteSnapshot) 
 			AverageBiddingVolume: v.AverageBiddingVolume,    // 委比
 			UpdateTime:           orderCreateTime,           // 更新时间
 		}
-		if v.Open < v.LastClose {
-			ticket.Tendency += "低开"
-		} else if v.Open == v.LastClose {
-			ticket.Tendency += "平开"
-		} else {
-			ticket.Tendency += "高开"
-		}
-		if ticket.AveragePrice < v.Open {
-			ticket.Tendency += ",回落"
-		} else {
-			ticket.Tendency += ",拉升"
-		}
-		if v.Price > ticket.AveragePrice {
-			ticket.Tendency += ",强势"
-		} else {
-			ticket.Tendency += ",弱势"
-		}
 
-		bs, ok := __stock2Block[ticket.Code]
-		if ok {
-			tb := bs[0]
-			if block, ok := __mapBlockData[tb.Code]; ok {
-				ticket.BlockName = block.Name
-				ticket.BlockRate = block.ChangeRate
-				ticket.BlockTop = block.Rank
-				shot, ok1 := __stock2Rank[ticket.Code]
-				if ok1 {
-					ticket.BlockRank = shot.TopNo
-				}
-			}
-		}
+		// 计算趋势
+		ticket.Tendency = calculateTendency(v, ticket.AveragePrice)
+
+		// 填充板块信息
+		fillBlockInfo(&ticket)
+
 		votingResults = append(votingResults, ticket)
 	}
-	gtP1 := 0 // 存在溢价
-	gtP2 := 0 // 超过1%
-	gtP3 := 0
-	gtP4 := 0
-	gtP5 := 0
-	yields := 0.00
-	for _, v := range votingResults {
-		rate := num.NetChangeRate(v.Open, v.Price)
-		if rate > 0 {
-			gtP1 += 1
-		}
-		if rate >= 1.00 {
-			gtP2 += 1
-		}
-		if rate >= 2.00 {
-			gtP3 += 1
-		}
-		if rate >= 3.00 {
-			gtP4 += 1
-		}
-		if rate >= 5.00 {
-			gtP5 += 1
-		}
-		yields += rate
+	return votingResults
+}
+
+// calculateTendency 计算趋势描述
+func calculateTendency(snapshot factors.QuoteSnapshot, averagePrice float64) string {
+	var tendency string
+
+	// 开盘情况
+	if snapshot.Open < snapshot.LastClose {
+		tendency += "低开"
+	} else if snapshot.Open == snapshot.LastClose {
+		tendency += "平开"
+	} else {
+		tendency += "高开"
+	}
+
+	// 均价相对开盘
+	if averagePrice < snapshot.Open {
+		tendency += ",回落"
+	} else {
+		tendency += ",拉升"
+	}
+
+	// 现价相对均价
+	if snapshot.Price > averagePrice {
+		tendency += ",强势"
+	} else {
+		tendency += ",弱势"
+	}
+
+	return tendency
+}
+
+// fillBlockInfo 填充板块信息
+func fillBlockInfo(ticket *models.Statistics) {
+	bs, ok := __stock2Block[ticket.Code]
+	if !ok {
+		return
+	}
+
+	tb := bs[0]
+	block, ok := __mapBlockData[tb.Code]
+	if !ok {
+		return
+	}
+
+	ticket.BlockName = block.Name
+	ticket.BlockRate = block.ChangeRate
+	ticket.BlockTop = block.Rank
+
+	shot, ok := __stock2Rank[ticket.Code]
+	if ok {
+		ticket.BlockRank = shot.TopNo
+	}
+}
+
+// renderTableAndWinRate 渲染表格并计算胜率统计
+func renderTableAndWinRate(statistics []models.Statistics, currentlyDay, updateTime string) {
+	// 渲染表格
+	tbl := tablewriter.NewWriter(os.Stdout)
+	tbl.SetHeader(tags.GetHeadersByTags(models.Statistics{}))
+
+	// 计算胜率统计
+	winRateStats := calculateWinRateStatistics(statistics)
+
+	// 填充表格数据
+	for _, v := range statistics {
 		tbl.Append(tags.GetValuesByTags(v))
 	}
-	yields /= float64(len(votingResults))
+
+	// 输出表格
 	fmt.Println() // 输出一个换行
 	tbl.Render()
-	count := len(stockSnapshots)
 	fmt.Println()
 
+	// 输出胜率统计
+	printWinRateStatistics(winRateStats, currentlyDay, updateTime, len(statistics))
+}
+
+// WinRateStatistics 胜率统计结果
+type WinRateStatistics struct {
+	WinCount     int     // 胜率（存在溢价）
+	Over1Percent int     // 超过1%
+	Over2Percent int     // 超过2%
+	Over3Percent int     // 超过3%
+	Over5Percent int     // 超过5%
+	AverageYield float64 // 平均收益率
+}
+
+// calculateWinRateStatistics 计算胜率统计
+func calculateWinRateStatistics(statistics []models.Statistics) WinRateStatistics {
+	stats := WinRateStatistics{}
+	totalYield := 0.0
+
+	for _, v := range statistics {
+		rate := num.NetChangeRate(v.Open, v.Price)
+		if rate > 0 {
+			stats.WinCount++
+		}
+		if rate >= 1.00 {
+			stats.Over1Percent++
+		}
+		if rate >= 2.00 {
+			stats.Over2Percent++
+		}
+		if rate >= 3.00 {
+			stats.Over3Percent++
+		}
+		if rate >= 5.00 {
+			stats.Over5Percent++
+		}
+		totalYield += rate
+	}
+
+	if len(statistics) > 0 {
+		stats.AverageYield = totalYield / float64(len(statistics))
+	}
+
+	return stats
+}
+
+// printWinRateStatistics 打印胜率统计
+func printWinRateStatistics(stats WinRateStatistics, currentlyDay, updateTime string, totalCount int) {
 	fmt.Println(currentlyDay + " " + updateTime + ", 胜率统计:")
-	fmt.Printf("\t==> 胜    率: %d/%d, %.2f%%, 收益率: %.2f%%\n", gtP1, count, 100*float64(gtP1)/float64(count), yields)
-	fmt.Printf("\t==> 溢价超1%%: %d/%d, %.2f%%\n", gtP2, count, 100*float64(gtP2)/float64(count))
-	fmt.Printf("\t==> 溢价超2%%: %d/%d, %.2f%%\n", gtP3, count, 100*float64(gtP3)/float64(count))
-	fmt.Printf("\t==> 溢价超3%%: %d/%d, %.2f%%\n", gtP4, count, 100*float64(gtP4)/float64(count))
-	fmt.Printf("\t==> 溢价超5%%: %d/%d, %.2f%%\n", gtP5, count, 100*float64(gtP5)/float64(count))
+	fmt.Printf("\t==> 胜    率: %d/%d, %.2f%%, 收益率: %.2f%%\n",
+		stats.WinCount, totalCount, 100*float64(stats.WinCount)/float64(totalCount), stats.AverageYield)
+	fmt.Printf("\t==> 溢价超1%%: %d/%d, %.2f%%\n", stats.Over1Percent, totalCount, 100*float64(stats.Over1Percent)/float64(totalCount))
+	fmt.Printf("\t==> 溢价超2%%: %d/%d, %.2f%%\n", stats.Over2Percent, totalCount, 100*float64(stats.Over2Percent)/float64(totalCount))
+	fmt.Printf("\t==> 溢价超3%%: %d/%d, %.2f%%\n", stats.Over3Percent, totalCount, 100*float64(stats.Over3Percent)/float64(totalCount))
+	fmt.Printf("\t==> 溢价超5%%: %d/%d, %.2f%%\n", stats.Over5Percent, totalCount, 100*float64(stats.Over5Percent)/float64(totalCount))
 	fmt.Println()
-	// 存储
-	storages.OutputStatistics(model, currentlyDay, votingResults)
 }
