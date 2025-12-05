@@ -41,7 +41,7 @@ func (m ModelMacdCross) OrderFlag() string {
 }
 
 func (m ModelMacdCross) Filter(ruleParameter config.RuleParameter, snapshot factors.QuoteSnapshot) error {
-	return GeneralFilter(ruleParameter, snapshot)
+	return ChainFilters(GeneralFilter)(ruleParameter, snapshot)
 }
 
 func (m ModelMacdCross) Sort(snapshots []factors.QuoteSnapshot) models.SortedStatus {
@@ -110,4 +110,3 @@ func (m ModelMacdCross) Evaluate(securityCode string, result *concurrent.TreeMap
 		})
 	}
 }
-

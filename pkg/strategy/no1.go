@@ -46,7 +46,7 @@ func (m ModelNo1) OrderFlag() string {
 }
 
 func (m ModelNo1) Filter(ruleParameter config.RuleParameter, snapshot factors.QuoteSnapshot) error {
-	return GeneralFilter(ruleParameter, snapshot)
+	return ChainFilters(GeneralFilter)(ruleParameter, snapshot)
 }
 
 func (m ModelNo1) Sort(snapshots []factors.QuoteSnapshot) SortedStatus {

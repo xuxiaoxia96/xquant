@@ -41,7 +41,7 @@ func (m ModelBreakthrough) OrderFlag() string {
 }
 
 func (m ModelBreakthrough) Filter(ruleParameter config.RuleParameter, snapshot factors.QuoteSnapshot) error {
-	return GeneralFilter(ruleParameter, snapshot)
+	return ChainFilters(GeneralFilter)(ruleParameter, snapshot)
 }
 
 func (m ModelBreakthrough) Sort(snapshots []factors.QuoteSnapshot) models.SortedStatus {
@@ -110,4 +110,3 @@ func (m ModelBreakthrough) Evaluate(securityCode string, result *concurrent.Tree
 		})
 	}
 }
-

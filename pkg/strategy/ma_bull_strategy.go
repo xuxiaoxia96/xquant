@@ -42,7 +42,7 @@ func (m ModelMABull) OrderFlag() string {
 }
 
 func (m ModelMABull) Filter(ruleParameter config.RuleParameter, snapshot factors.QuoteSnapshot) error {
-	return GeneralFilter(ruleParameter, snapshot)
+	return ChainFilters(GeneralFilter)(ruleParameter, snapshot)
 }
 
 func (m ModelMABull) Sort(snapshots []factors.QuoteSnapshot) models.SortedStatus {
@@ -111,4 +111,3 @@ func (m ModelMABull) Evaluate(securityCode string, result *concurrent.TreeMap[st
 		})
 	}
 }
-

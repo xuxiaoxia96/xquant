@@ -1,14 +1,14 @@
 package rules
 
 import (
-	"errors"
 	"fmt"
+
+	"xquant/pkg/config"
+	"xquant/pkg/factors"
 
 	"gitee.com/quant1x/gox/exception"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/num"
-	"xquant/pkg/config"
-	"xquant/pkg/factors"
 )
 
 func init() {
@@ -35,7 +35,7 @@ func throwException(err error, ruleParameter config.RuleParameter, value float64
 	if !ruleParameter.Verbose {
 		return err
 	} else {
-		return errors.New(fmt.Sprintf("%s, %f", err.Error(), value))
+		return fmt.Errorf("%s, %f", err.Error(), value)
 	}
 }
 
