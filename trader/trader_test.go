@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"xquant/models"
 	"xquant/strategies"
 )
 
@@ -41,7 +40,7 @@ func TestTradePlaceOrder(t *testing.T) {
 }
 
 func TestCalculateFundForStrategy(t *testing.T) {
-	var model models.Strategy
+	var model strategies.Strategy
 	model = new(TestModel)
 	fund := CalculateFundForStrategy(model)
 	fmt.Println(fund)

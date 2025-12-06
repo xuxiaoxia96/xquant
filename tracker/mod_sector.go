@@ -13,6 +13,7 @@ import (
 	"xquant/factors"
 	"xquant/market"
 	"xquant/models"
+	"xquant/strategies"
 
 	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
@@ -27,7 +28,7 @@ import (
 )
 
 // ScanAllSectors 扫描板块
-func ScanAllSectors(barIndex *int, model models.Strategy) {
+func ScanAllSectors(barIndex *int, model strategies.Strategy) {
 	tradeRule := config.GetStrategyParameterByCode(model.Code())
 	if tradeRule == nil {
 		logger.Errorf("strategy[%d]: trade rule not found", model.Code())
@@ -147,7 +148,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	// TODO 板块再排序
 	// 输出 板块排行表格
 	var lastBlocks []SectorInfo
-	isHead := tradeRule.Flag == models.OrderFlagHead
+	isHead := tradeRule.Flag == strategies.OrderFlagHead
 	if isHead {
 		lastBlocks = api.Filter(allBlocks, sectorFilterForHead)
 	} else {
@@ -192,7 +193,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	fmt.Println("")
 	bar = progressbar.NewBar(*barIndex, "执行["+model.Name()+"]", count)
 	*barIndex++
-	mapStock := concurrent.NewTreeMap[string, models.ResultInfo]()
+	mapStock := concurrent.NewTreeMap[string, strategies.Signal]()
 	mainStart := time.Now()
 	var wg = sync.WaitGroup{}
 	for i, v := range stockCodes {
@@ -205,7 +206,7 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	wg.Wait()
 	fmt.Println()
 	table := tablewriter.NewWriter(os.Stdout)
-	table.Header(toInterfaceSlice(tags.GetHeadersByTags(models.ResultInfo{}))...)
+	table.Header(toInterfaceSlice(tags.GetHeadersByTags(strategies.Signal{}))...)
 	elapsedTime := time.Since(mainStart) / time.Millisecond
 	goals := mapStock.Size()
 	message := fmt.Sprintf("\n总耗时: %.3fs, 总记录: %d, 命中: %d, 平均: %.3f/s\n", float64(elapsedTime)/1000, count, goals, float64(count)/(float64(elapsedTime)/1000))
@@ -215,8 +216,8 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	wg = sync.WaitGroup{}
 	bar = progressbar.NewBar(*barIndex, "执行[综合策略]", goals)
 	*barIndex++
-	rs := make([]models.ResultInfo, 0)
-	mapStock.Each(func(key string, value models.ResultInfo) {
+	rs := make([]strategies.Signal, 0)
+	mapStock.Each(func(key string, value strategies.Signal) {
 		bar.Add(1)
 		row := value
 		stockCode := row.Code
@@ -238,10 +239,10 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 				}
 			}
 		}
-		predict := func(info models.ResultInfo, rs *[]models.ResultInfo, tbl *tablewriter.Table) {
+		predict := func(info strategies.Signal, rs *[]strategies.Signal, tbl *tablewriter.Table) {
 			defer wg.Done()
 			wg.Add(1)
-			info.Predict()
+			info.PredictTrend()
 			*rs = append(*rs, info)
 			tbl.Append(toInterfaceSlice(tags.GetValuesByTags(info))...)
 		}
@@ -254,14 +255,14 @@ func ScanAllSectors(barIndex *int, model models.Strategy) {
 	table.Render()
 }
 
-func output(strategyNo uint64, v []models.ResultInfo) {
+func output(strategyNo uint64, v []strategies.Signal) {
 	df := pandas.LoadStructs(v)
 	filename := fmt.Sprintf("%s/%s/%s-%d.csv", cache.GetRootPath(), models.CACHE_STRATEGY_PATH, cache.Today(), strategyNo)
 	_ = df.WriteCSV(filename)
 }
 
 // 个股评估
-func evaluate(api models.Strategy, wg *sync.WaitGroup, code string, result *concurrent.TreeMap[string, models.ResultInfo]) {
+func evaluate(api strategies.Strategy, wg *sync.WaitGroup, code string, result *concurrent.TreeMap[string, strategies.Signal]) {
 	defer wg.Done()
 	api.Evaluate(code, result)
 }

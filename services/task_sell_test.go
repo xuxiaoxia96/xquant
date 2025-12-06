@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"xquant/config"
-	"xquant/models"
+	"xquant/strategies"
 )
 
 func TestTaskSell_LastSession(t *testing.T) {
-	sellStrategyCode := models.ModelOneSizeFitsAllSells
+	sellStrategyCode := strategies.ModelOneSizeFitsAllSells
 	// 1. 获取117号策略(卖出)
 	sellRule := config.GetStrategyParameterByCode(sellStrategyCode)
 	if sellRule == nil {

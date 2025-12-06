@@ -5,19 +5,11 @@ import (
 
 	"xquant/config"
 	"xquant/models"
-	"xquant/permissions"
-	"gitee.com/quant1x/gox/logger"
+	"xquant/strategies"
 )
 
 // ExecuteStrategy 执行策略
-func ExecuteStrategy(model models.Strategy, barIndex *int) {
-	// 策略权限验证
-	err := permissions.CheckPermission(model)
-	if err != nil {
-		logger.Error(err)
-		fmt.Println(err)
-		return
-	}
+func ExecuteStrategy(model strategies.Strategy, barIndex *int) {
 	tradeRule := config.GetStrategyParameterByCode(model.Code())
 	if tradeRule == nil {
 		fmt.Printf("strategy[%d]: trade rule not found\n", model.Code())

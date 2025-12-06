@@ -7,8 +7,8 @@ import (
 	"gitee.com/quant1x/data/exchange"
 	"xquant/cache"
 	"xquant/config"
-	"xquant/models"
 	"xquant/storages"
+	"xquant/strategies"
 	"xquant/trader"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
@@ -35,7 +35,7 @@ func getStrategyParameterList(sellStrategyId uint64) []config.StrategyParameter 
 	traderConfig := config.TraderConfig()
 	var list []config.StrategyParameter
 	for _, v := range traderConfig.Strategies {
-		if v.Flag == models.OrderFlagSell || v.SellStrategy != sellStrategyId {
+		if v.Flag == strategies.OrderFlagSell || v.SellStrategy != sellStrategyId {
 			continue
 		}
 		list = append(list, v)

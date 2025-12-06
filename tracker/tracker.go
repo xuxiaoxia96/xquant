@@ -2,7 +2,6 @@ package tracker
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"time"
@@ -15,9 +14,9 @@ import (
 	"xquant/config"
 	"xquant/factors"
 	"xquant/models"
-	"xquant/permissions"
 	"xquant/pkg/progressbar"
 	"xquant/storages"
+	"xquant/strategies"
 )
 
 // Tracker 盘中跟踪
@@ -37,15 +36,11 @@ func Tracker(strategyNumbers ...uint64) {
 		}
 		barIndex := 1
 		models.SyncAllSnapshots(&barIndex)
-		//stockCodes := radar.ScanSectorForTick(barIndex)
+		// 市场雷达：扫描板块，动态发现表现好的股票
+		// stockCodes := ScanSectorForTick(&barIndex)
 		for _, strategyNumber := range strategyNumbers {
-			model, err := models.CheckoutStrategy(strategyNumber)
+			model, err := strategies.CheckoutStrategy(strategyNumber)
 			if err != nil || model == nil {
-				continue
-			}
-			err = permissions.CheckPermission(model)
-			if err != nil {
-				log.Printf("[Tracker] 权限检查失败: %v", err)
 				continue
 			}
 			strategyParameter := config.GetStrategyParameterByCode(strategyNumber)
@@ -68,7 +63,7 @@ func Tracker(strategyNumbers ...uint64) {
 	}
 }
 
-func snapshotTracker(barIndex *int, model models.Strategy, tradeRule *config.StrategyParameter) {
+func snapshotTracker(barIndex *int, model strategies.Strategy, tradeRule *config.StrategyParameter) {
 	if tradeRule == nil {
 		return
 	}
@@ -102,7 +97,7 @@ func snapshotTracker(barIndex *int, model models.Strategy, tradeRule *config.Str
 	})
 	// 结果集排序
 	sortedStatus := model.Sort(stockSnapshots)
-	if sortedStatus == models.SortDefault || sortedStatus == models.SortNotExecuted {
+	if sortedStatus == strategies.SortDefault || sortedStatus == strategies.SortNotExecuted {
 		// 默认排序或者排序未执行, 使用默认排序
 		sort.Slice(stockSnapshots, func(i, j int) bool {
 			a := stockSnapshots[i]
@@ -119,7 +114,7 @@ func snapshotTracker(barIndex *int, model models.Strategy, tradeRule *config.Str
 
 // ProcessStrategyResults 处理策略扫描结果
 // 包括：构建统计数据、渲染表格、计算胜率、更新股票池并执行交易
-func ProcessStrategyResults(model models.Strategy, stockSnapshots []factors.QuoteSnapshot) {
+func ProcessStrategyResults(model strategies.Strategy, stockSnapshots []factors.QuoteSnapshot) {
 	// 1. 获取当前交易日期和时间
 	currentlyDay, updateTime := getCurrentTradeDateAndTime()
 

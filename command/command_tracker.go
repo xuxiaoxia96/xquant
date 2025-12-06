@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"xquant/models"
-	"xquant/permissions"
+	"xquant/strategies"
 	"xquant/tracker"
+
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 	cmder "github.com/spf13/cobra"
@@ -34,22 +34,14 @@ func initTracker() {
 		Long:  trackerDescription,
 		Run: func(cmd *cmder.Command, args []string) {
 			var strategyCodes []uint64
-			array := strings.Split(trackerStrategyCodes, ",")
-			for _, strategyNumber := range array {
+			for _, strategyNumber := range strings.Split(trackerStrategyCodes, ",") {
 				strategyNumber := strings.TrimSpace(strategyNumber)
 				code := api.ParseUint(strategyNumber)
-				// 1. 确定策略是否存在
-				medel, err := models.CheckoutStrategy(code)
+				// 确定策略是否存在
+				_, err := strategies.CheckoutStrategy(code)
 				if err != nil {
 					fmt.Printf("策略编号%d, 不存在\n", code)
 					logger.Errorf("策略编号%d, 不存在", code)
-					continue
-				}
-				// 2. 确定策略是否有权限
-				err = permissions.CheckPermission(medel)
-				if err != nil {
-					fmt.Printf("策略编号%d, 权限验证失败: %+v\n", code, err)
-					logger.Errorf("策略编号%d, 权限验证失败: %+v", code, err)
 					continue
 				}
 				strategyCodes = append(strategyCodes, code)

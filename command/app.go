@@ -8,7 +8,9 @@ import (
 	_ "unsafe" // For go:linkname
 
 	"xquant/models"
+	"xquant/strategies"
 	"xquant/tracker"
+
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/runtime"
 	"gitee.com/quant1x/num"
@@ -89,7 +91,7 @@ func GlobalFlags() *cli.Command {
 		Use: Application,
 		Run: func(cmd *cli.Command, args []string) {
 			logger.Warnf("stock default args:%+v", os.Args)
-			model, err := models.CheckoutStrategy(strategyNumber)
+			model, err := strategies.CheckoutStrategy(strategyNumber)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -111,7 +113,7 @@ func GlobalFlags() *cli.Command {
 			//
 		},
 	}
-	engineCmd.Flags().Uint64Var(&strategyNumber, "strategy", models.DefaultStrategy, models.UsageStrategyList())
+	engineCmd.Flags().Uint64Var(&strategyNumber, "strategy", strategies.DefaultStrategy, strategies.UsageStrategyList())
 	engineCmd.Flags().IntVar(&models.CountDays, "count", 0, "统计多少天")
 	engineCmd.Flags().IntVar(&models.CountTopN, "top", models.AllStockTopN(), "输出前排几名")
 	engineCmd.PersistentFlags().BoolVar(&businessDebug, "debug", businessDebug, "打开业务调试开关, 慎重使用!")

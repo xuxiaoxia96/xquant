@@ -20,8 +20,9 @@ import (
 	"xquant/pkg/progressbar"
 )
 
-// ScanSectorForTick 扫描板块
-func ScanSectorForTick(barIndex *int) []string {
+// scanSectorForTickInternal 扫描板块的内部实现
+// 这是市场雷达的核心实现，被 radar.go 中的 ScanSectorForTick 函数调用
+func scanSectorForTickInternal(barIndex *int) []string {
 	// 不分板块类型, 所有的板块放在一起排序
 	allBlocks := scanBlockByTypeForTick(barIndex, securities.BK_GAINIAN)
 	// 扫描板块内个股排名

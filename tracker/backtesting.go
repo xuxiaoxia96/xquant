@@ -11,6 +11,7 @@ import (
 	"xquant/market"
 	"xquant/models"
 	"xquant/storages"
+	"xquant/strategies"
 
 	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
@@ -102,7 +103,7 @@ func BackTesting(strategyNo uint64, countDays, countTopN int) {
 		fmt.Println(err)
 		return
 	}
-	model, err := models.CheckoutStrategy(strategyNo)
+	model, err := strategies.CheckoutStrategy(strategyNo)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -236,7 +237,7 @@ func BackTesting(strategyNo uint64, countDays, countTopN int) {
 		})
 		// 排序
 		sortedStatus := model.Sort(stockSnapshots)
-		if sortedStatus == models.SortDefault || sortedStatus == models.SortNotExecuted {
+		if sortedStatus == strategies.SortDefault || sortedStatus == strategies.SortNotExecuted {
 			sort.Slice(stockSnapshots, func(i, j int) bool {
 				a := stockSnapshots[i]
 				b := stockSnapshots[j]
@@ -271,16 +272,16 @@ func BackTesting(strategyNo uint64, countDays, countTopN int) {
 				NextPremiumRate:   num.NetChangeRate(snapshot.Open, snapshot.NextOpen),
 			}
 			switch tradeRule.Flag {
-			case models.OrderFlagHead:
+			case strategies.OrderFlagHead:
 				sample.OpenPremiumRate = num.NetChangeRate(snapshot.Open, snapshot.Price)
 				sample.NextPremiumRate = num.NetChangeRate(snapshot.Open, snapshot.NextOpen)
-			case models.OrderFlagTail:
+			case strategies.OrderFlagTail:
 				sample.OpenPremiumRate = num.NetChangeRate(snapshot.Price, snapshot.Price)
 				sample.NextPremiumRate = num.NetChangeRate(snapshot.Price, snapshot.NextClose)
 				if snapshot.Price < snapshot.NextClose && snapshot.Price*(1+backTestingParameter.NextPremiumRate+0.005) < snapshot.NextHigh {
 					sample.NextPremiumRate = num.NetChangeRate(snapshot.Price, snapshot.Price*(1+backTestingParameter.NextPremiumRate))
 				}
-			case models.OrderFlagTick:
+			case strategies.OrderFlagTick:
 				sample.OpenPremiumRate = num.NetChangeRate(snapshot.Price, snapshot.Price)
 				sample.NextPremiumRate = num.NetChangeRate(snapshot.Price, snapshot.NextClose)
 			}
@@ -318,11 +319,11 @@ func BackTesting(strategyNo uint64, countDays, countTopN int) {
 				Alpha:           v.Alpha,
 			}
 			switch tradeRule.Flag {
-			case models.OrderFlagHead:
+			case strategies.OrderFlagHead:
 				zs.UpdateTime = zs.Date + " 09:27:10.000"
-			case models.OrderFlagTail:
+			case strategies.OrderFlagTail:
 				zs.UpdateTime = zs.Date + " 14:56:10.000"
-			case models.OrderFlagTick:
+			case strategies.OrderFlagTick:
 				zs.UpdateTime = zs.Date + " 14:56:10.000"
 			}
 

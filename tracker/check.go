@@ -9,6 +9,7 @@ import (
 	"xquant/config"
 	"xquant/factors"
 	"xquant/models"
+	"xquant/strategies"
 
 	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/data/level1/securities"
@@ -84,7 +85,7 @@ func CheckStrategy(strategyCode uint64, securityCode, testDate string) {
 
 	// 5. 获取策略对象
 	fmt.Printf("\t=> 5. 获取策略[%d]对象...\n", strategyCode)
-	model, err := models.CheckoutStrategy(strategyCode)
+	model, err := strategies.CheckoutStrategy(strategyCode)
 	if err != nil {
 		fmt.Printf("\t=> 5. 获取策略[%d]对象...失败: %+v\n", strategyCode, err)
 		return

@@ -10,6 +10,7 @@ import (
 	"xquant/market"
 	"xquant/models"
 	"xquant/realtime"
+	"xquant/strategies"
 	"xquant/trader"
 	"gitee.com/quant1x/gox/logger"
 	"gitee.com/quant1x/gox/runtime"
@@ -29,7 +30,7 @@ func jobOneSizeFitsAllSales() {
 // 一刀切卖出
 func cookieCutterSell() {
 	defer runtime.IgnorePanic("")
-	sellStrategyCode := models.ModelOneSizeFitsAllSells
+	sellStrategyCode := strategies.ModelOneSizeFitsAllSells
 	// 1. 获取117号策略(卖出)
 	sellRule := config.GetStrategyParameterByCode(sellStrategyCode)
 	if sellRule == nil {

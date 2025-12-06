@@ -108,3 +108,11 @@ func PrintRuleList() {
 		}
 	}
 }
+
+// GeneralFilter 通用过滤条件
+//
+//	执行所有在册的规则，只返回错误信息
+func GeneralFilter(ruleParameter config.RuleParameter, snapshot factors.QuoteSnapshot) error {
+	_, _, err := Filter(ruleParameter, snapshot)
+	return err
+}

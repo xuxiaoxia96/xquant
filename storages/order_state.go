@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitee.com/quant1x/data/exchange"
 	"xquant/cache"
-	"xquant/models"
+	"xquant/strategies"
 	"xquant/trader"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
 	"gitee.com/quant1x/gox/logger"
 )
@@ -41,14 +42,14 @@ func order_state_fields(date, quantStrategyName string, direction trader.Directi
 }
 
 // 从策略分拣订单状态字段
-func order_state_fields_from_strategy(date string, model models.Strategy, direction trader.Direction) (flagPath, filenamePrefix string) {
-	quantStrategyName := models.QmtStrategyName(model)
+func order_state_fields_from_strategy(date string, model strategies.Strategy, direction trader.Direction) (flagPath, filenamePrefix string) {
+	quantStrategyName := strategies.QmtStrategyName(model)
 	flagPath, filenamePrefix = order_state_fields(date, quantStrategyName, direction)
 	return
 }
 
 // 获得订单标识文件名
-func order_state_filename(date string, model models.Strategy, direction trader.Direction, code string) string {
+func order_state_filename(date string, model strategies.Strategy, direction trader.Direction, code string) string {
 	orderFlagPath, filenamePrefix := order_state_fields_from_strategy(date, model, direction)
 	securityCode := exchange.CorrectSecurityCode(code)
 	filename := fmt.Sprintf("%s-%s.done", filenamePrefix, securityCode)
@@ -57,19 +58,19 @@ func order_state_filename(date string, model models.Strategy, direction trader.D
 }
 
 // CheckOrderState 检查订单执行状态
-func CheckOrderState(date string, model models.Strategy, code string, direction trader.Direction) bool {
+func CheckOrderState(date string, model strategies.Strategy, code string, direction trader.Direction) bool {
 	filename := order_state_filename(date, model, direction, code)
 	return api.FileExist(filename)
 }
 
 // PushOrderState 推送订单完成状态
-func PushOrderState(date string, model models.Strategy, code string, direction trader.Direction) error {
+func PushOrderState(date string, model strategies.Strategy, code string, direction trader.Direction) error {
 	filename := order_state_filename(date, model, direction, code)
 	return api.Touch(filename)
 }
 
 // 捡出策略订单状态文件列表
-func checkoutStrategyOrderFiles(date string, model models.Strategy, direction trader.Direction) []string {
+func checkoutStrategyOrderFiles(date string, model strategies.Strategy, direction trader.Direction) []string {
 	orderFlagPath, filenamePrefix := order_state_fields_from_strategy(date, model, direction)
 	pattern := filepath.Join(orderFlagPath, filenamePrefix+"-*"+orderStateFileExtension)
 	files, err := filepath.Glob(pattern)
@@ -81,7 +82,7 @@ func checkoutStrategyOrderFiles(date string, model models.Strategy, direction tr
 }
 
 // CountStrategyOrders 统计策略订单数
-func CountStrategyOrders(date string, model models.Strategy, direction trader.Direction) int {
+func CountStrategyOrders(date string, model strategies.Strategy, direction trader.Direction) int {
 	files := checkoutStrategyOrderFiles(date, model, direction)
 	return len(files)
 }

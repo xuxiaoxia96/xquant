@@ -1,17 +1,18 @@
 package storages
 
 import (
-	"gitee.com/quant1x/data/exchange"
 	"xquant/config"
-	"xquant/models"
+	"xquant/strategies"
 	"xquant/trader"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/logger"
 )
 
 // 策略订单是否已完成
-func strategyOrderIsFinished(model models.Strategy) bool {
+func strategyOrderIsFinished(model strategies.Strategy) bool {
 	strategyId := model.Code()
-	strategyName := models.QmtStrategyName(model)
+	strategyName := strategies.QmtStrategyName(model)
 	tradeRule := config.GetStrategyParameterByCode(strategyId)
 	if tradeRule == nil || !tradeRule.BuyEnable() {
 		return true
@@ -30,7 +31,7 @@ func strategyOrderIsFinished(model models.Strategy) bool {
 }
 
 // 检查买入订单, 条件满足则买入
-func checkOrderForBuy(list []StockPool, model models.Strategy, date string) bool {
+func checkOrderForBuy(list []StockPool, model strategies.Strategy, date string) bool {
 	// 1. 判断是否交易日
 	if !exchange.DateIsTradingDay() {
 		// 非交易日
@@ -59,7 +60,7 @@ func checkOrderForBuy(list []StockPool, model models.Strategy, date string) bool
 		return true
 	}
 	// 6. 策略是否盘中实时订单
-	isTickOrder := strategyParameter.Flag == models.OrderFlagTick
+	isTickOrder := strategyParameter.Flag == strategies.OrderFlagTick
 	// 7. 策略最大可交易标的配额余量
 	//remainQuota := strategyParameter.Total - numberOfStrategy
 	length := len(list)

@@ -12,6 +12,7 @@ import (
 	"xquant/market"
 	"xquant/models"
 	"xquant/storages"
+	"xquant/strategies"
 
 	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
@@ -37,7 +38,7 @@ var (
 )
 
 // AllScan 全市场扫描
-func AllScan(barIndex *int, model models.Strategy) {
+func AllScan(barIndex *int, model strategies.Strategy) {
 	today := exchange.IndexToday()
 	dates := exchange.TradingDateRange(exchange.MARKET_CN_FIRST_DATE, today)
 	days := len(dates)
@@ -129,7 +130,7 @@ func AllScan(barIndex *int, model models.Strategy) {
 	})
 	// 排序
 	sortedStatus := model.Sort(stockSnapshots)
-	if sortedStatus == models.SortDefault || sortedStatus == models.SortNotExecuted {
+	if sortedStatus == strategies.SortDefault || sortedStatus == strategies.SortNotExecuted {
 		sort.Slice(stockSnapshots, func(i, j int) bool {
 			a := stockSnapshots[i]
 			b := stockSnapshots[j]

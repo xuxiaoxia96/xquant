@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitee.com/quant1x/data/exchange"
 	"xquant/cache"
 	"xquant/config"
-	"xquant/models"
+	"xquant/strategies"
+
+	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/http"
 	"gitee.com/quant1x/gox/logger"
 )
@@ -187,9 +188,9 @@ func CancelOrder(orderId int) error {
 }
 
 // PlaceOrder 下委托订单
-func PlaceOrder(direction Direction, model models.Strategy, securityCode string, priceType PriceType, price float64, volume int) (int, error) {
-	strategyName := models.QmtStrategyName(model)
-	orderRemark := models.QmtOrderRemark(model)
+func PlaceOrder(direction Direction, model strategies.Strategy, securityCode string, priceType PriceType, price float64, volume int) (int, error) {
+	strategyName := strategies.QmtStrategyName(model)
+	orderRemark := strategies.QmtOrderRemark(model)
 	return DirectOrder(direction, strategyName, orderRemark, securityCode, priceType, price, volume)
 }
 
@@ -223,7 +224,7 @@ func DirectOrder(direction Direction, strategyName, orderRemark, securityCode st
 }
 
 // 计算策略标的的可用资金
-func CalculateFundForStrategy(model models.Strategy) float64 {
+func CalculateFundForStrategy(model strategies.Strategy) float64 {
 	strategyCode := model.Code()
 	rule := config.GetStrategyParameterByCode(strategyCode)
 	if rule == nil {

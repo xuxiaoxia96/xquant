@@ -1,9 +1,10 @@
 package tracker
 
 import (
-	"gitee.com/quant1x/data/level1/securities"
 	"xquant/config"
-	"xquant/models"
+	"xquant/strategies"
+
+	"gitee.com/quant1x/data/level1/securities"
 )
 
 // SectorInfo 板块信息
@@ -34,7 +35,7 @@ type SectorInfo struct {
 //	板块排名从1开始
 func scanBlockByType(pbarIndex *int, blockType securities.BlockType, rule *config.StrategyParameter) []SectorInfo {
 	bs := []SectorInfo{}
-	isHead := rule.Flag == models.OrderFlagHead
+	isHead := rule.Flag == strategies.OrderFlagHead
 	blocks := scanSectorSnapshots(pbarIndex, blockType, isHead)
 	rank := 0
 	for i := 0; i < len(blocks); i++ {

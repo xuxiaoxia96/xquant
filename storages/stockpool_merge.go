@@ -8,6 +8,7 @@ import (
 	"xquant/cache"
 	"xquant/config"
 	"xquant/models"
+	"xquant/strategies"
 
 	"gitee.com/quant1x/data/exchange"
 	"gitee.com/quant1x/gox/api"
@@ -48,7 +49,7 @@ func saveStockPoolToCache(list []StockPool) {
 // 这是盘内跟踪交易的核心入口函数：
 // 1. 将策略扫描结果合并到股票池
 // 2. 如果有新增标的，执行买入交易
-func UpdateStockPoolAndExecuteTrading(model models.Strategy, date string, statistics []models.Statistics) {
+func UpdateStockPoolAndExecuteTrading(model strategies.Strategy, date string, statistics []models.Statistics) {
 	tradeRule := config.GetStrategyParameterByCode(model.Code())
 	if tradeRule == nil || !tradeRule.Enable() || tradeRule.Total == 0 {
 		// 配置不存在, 或者规则无效, 不执行交易
@@ -62,7 +63,7 @@ func UpdateStockPoolAndExecuteTrading(model models.Strategy, date string, statis
 // 这是盘内跟踪交易的核心函数，包含两个主要步骤：
 // 1. 合并策略扫描结果到股票池（标记新增、召回等）
 // 2. 如果有新增标的，执行买入交易
-func mergeStockPoolAndExecuteTrading(model models.Strategy, date string, statistics []models.Statistics, maximumNumberOfAvailablePurchases int) {
+func mergeStockPoolAndExecuteTrading(model strategies.Strategy, date string, statistics []models.Statistics, maximumNumberOfAvailablePurchases int) {
 	poolMutex.Lock()
 	defer poolMutex.Unlock()
 
@@ -81,7 +82,7 @@ func mergeStockPoolAndExecuteTrading(model models.Strategy, date string, statist
 
 // mergeStockPool 合并股票池
 // 将策略扫描结果合并到本地股票池，返回更新后的股票池和新增的标的列表
-func mergeStockPool(model models.Strategy, date string, statistics []models.Statistics, maximumNumberOfAvailablePurchases int) ([]StockPool, []StockPool) {
+func mergeStockPool(model strategies.Strategy, date string, statistics []models.Statistics, maximumNumberOfAvailablePurchases int) ([]StockPool, []StockPool) {
 	localStockPool := getStockPoolFromCache()
 	tradeDate := exchange.FixTradeDate(date)
 	now := time.Now()
@@ -100,7 +101,7 @@ func mergeStockPool(model models.Strategy, date string, statistics []models.Stat
 }
 
 // buildStockPoolMapFromStatistics 从统计数据构建股票池映射
-func buildStockPoolMapFromStatistics(model models.Strategy, statistics []models.Statistics, maximumNumberOfAvailablePurchases int, updateTime string) map[string]*StockPool {
+func buildStockPoolMapFromStatistics(model strategies.Strategy, statistics []models.Statistics, maximumNumberOfAvailablePurchases int, updateTime string) map[string]*StockPool {
 	stockPoolMap := make(map[string]*StockPool, len(statistics))
 
 	for i, v := range statistics {
@@ -155,7 +156,7 @@ func processExistingStockPool(localStockPool []StockPool, newStockPoolMap map[st
 }
 
 // extractNewStocks 提取新增的标的（未在本地股票池中存在的）
-func extractNewStocks(newStockPoolMap map[string]*StockPool, model models.Strategy, updateTime string) []StockPool {
+func extractNewStocks(newStockPoolMap map[string]*StockPool, model strategies.Strategy, updateTime string) []StockPool {
 	var newStocks []StockPool
 
 	for _, stock := range newStockPoolMap {
